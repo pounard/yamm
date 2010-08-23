@@ -222,11 +222,6 @@ class Yamm_EntityFactory
    *   Keyed array, keys are module name, values are hook return.
    */
   public static function executeHook($hook) {
-    static $supported_hooks = array('post_construct', 'post_update', 'post_save');
-    // Break it on unsupported hooks.
-    if (! in_array($hook, $supported_hooks)) {
-      return;
-    }
     // Fetch hook parameters.
     $args = func_get_args();
     // Remove hook name from parameters.
@@ -576,31 +571,54 @@ abstract class Yamm_Entity
     }
     $this->__object = $object;
     $this->_constructDependencies($this->__object);
-    $this->__postConstruct();
+    $this->__hookDependencies();
+    $this->__hookData();
   }
 
   /**
-   * Execute post construct hook.
+   * Execute dependencies hook.
    */
-  private function __postConstruct() {
-    $result = Yamm_EntityFactory::executeHook('post_construct', $this->__type, $this->__identifier, $this->__object);
+  private function __hookDependencies() {
+    $result = Yamm_EntityFactory::executeHook('data', $this->__type, $this->__identifier, $this->__object);
+    // Add dependencies.
+    if (! empty($result)) {
+      foreach (result as $type => $identifierList) {
+        foreach ($identifierList as $identifier) {
+          $this->_addDependency($type, $identifier);
+        }
+      }
+    }
+  }
+
+  /**
+   * Execute data hook.
+   */
+  private function __hookData() {
+    $result = Yamm_EntityFactory::executeHook('data', $this->__type, $this->__identifier, $this->__object);
     if (! empty($result)) {
       $this->_setData('_external_module_data', $result);
     }
   }
 
   /**
-   * Execute post update hook.
+   * Execute presave hook.
    */
-  private function __postUpdate() {
-    Yamm_EntityFactory::executeHook('post_update', $this->__type, $this->__identifier, $this->__object, $this->_getData('_external_module_data'));
+  private function __hookPresave() {
+    Yamm_EntityFactory::executeHook('presave', $this->__type, $this->__object, $this->_getData('_external_module_data'));
   }
 
   /**
-   * Execute post save hook.
+   * Execute update hook.
    */
-  private function __postSave() {
-    Yamm_EntityFactory::executeHook('post_save', $this->__type, $this->__identifier, $this->__object, $this->_getData('_external_module_data'));
+  private function __hookUpdate() {
+    Yamm_EntityFactory::executeHook('update', $this->__type, $this->__identifier, $this->__object, $this->_getData('_external_module_data'));
+  }
+
+  /**
+   * Execute save hook.
+   */
+  private function __hookSave() {
+    Yamm_EntityFactory::executeHook('save', $this->__type, $this->__identifier, $this->__object, $this->_getData('_external_module_data'));
   }
 
   private function __setTypeFromClass() {
@@ -613,6 +631,8 @@ abstract class Yamm_Entity
    * Yamm_EntityParser implementation.
    */
   public function save() {
+    $this->__hookPresave();
+
     // Update object
     try {
       $this->__identifier = Yamm_EntityFactory::getIdentifierByUuid($this->__uuid);
@@ -625,7 +645,7 @@ abstract class Yamm_Entity
       $this->_update($this->__object, $this->__identifier);
       yamm_api_debug('Update ' . $this->__type . ' ' . $this->__identifier);
 
-      $this->__postUpdate();
+      $this->__hookUpdate();
     }
 
     // Insert again a deleted object
@@ -642,7 +662,7 @@ abstract class Yamm_Entity
       yamm_api_uuid_save($this->__uuid, $this->__type, $this->__identifier);
       yamm_api_debug('Insert ' . $this->__type . ' ' . $this->__identifier);
 
-      $this->__postSave();
+      $this->__hookSave();
     }
 
     // Save a new object
@@ -657,7 +677,7 @@ abstract class Yamm_Entity
       yamm_api_uuid_save($this->__uuid, $this->__type, $this->__identifier);
       yamm_api_debug('Insert ' . $this->__type . ' ' . $this->__identifier);
 
-      $this->__postSave();
+      $this->__hookSave();
     }
   }
 

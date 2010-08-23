@@ -24,16 +24,16 @@ class Yamm_Entity_Node extends Yamm_Entity
    * @see Entity::_constructDependencies()
    */
   protected function _constructDependencies($node) {
-    // Dependency on content type
+    // Dependency on content type.
     $this->_addDependency('content', $node->type);
 
-    // Dependency on user, only if exists
+    // Dependency on user, only if exists.
     if ($node->uid && ($user = user_load($node->uid))) {
       $user_uuid = $this->_addDependency('user', $user->uid);
       $this->_setData('user', $user_uuid);
     }
 
-    // Dependency on terms
+    // Dependency on terms.
     $terms = array();
     foreach ($node->taxonomy as $term) {
       $term_uuid = $this->_addDependency('term', $term->tid);
@@ -41,7 +41,7 @@ class Yamm_Entity_Node extends Yamm_Entity
     }
     $this->_setData('terms', $terms);
 
-    // Handle node reference fields
+    // Handle node reference fields.
     $nodes = array();
     foreach ($node as $field_name => &$value) {
       if (substr($field_name, 0, 6) == 'field_' && isset($value[0]['nid'])) {
@@ -57,7 +57,7 @@ class Yamm_Entity_Node extends Yamm_Entity
     $this->_setData('nodes', $nodes);
 
     // TODO handle file and media fields, for this, we need abstract file
-    // fetching through our entity parser
+    // fetching through our entity parser.
   }
 
   /**

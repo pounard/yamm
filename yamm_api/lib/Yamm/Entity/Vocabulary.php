@@ -7,37 +7,39 @@
  */
 
 /**
- * Simple user Yamm_EntitySettingsAbstract implementation
+ * Vocabulary entity settings implementation.
  */
-class Yamm_Entity_VocabularySettings extends Yamm_EntitySettingsAbstract {
-
+class Yamm_Entity_VocabularySettings extends Yamm_EntitySettingsAbstract
+{
   const DUPLICATE_IGNORE = 1;
   const DUPLICATE_OVERRIDE = 2;
 
   /**
    * (non-PHPdoc)
-   * @see www/sites/all/modules/custom/yamm/yamm_api/Yamm_EntitySettingsAbstract#settingsForm()
+   * @see Yamm_EntitySettingsAbstract::settingsForm()
    */
   public function form() {
     $form = array();
 
     $options = array(
       Yamm_Entity_VocabularySettings::DUPLICATE_IGNORE => t('Create new vocabulary'),
-      Yamm_Entity_VocabularySettings::DUPLICATE_OVERRIDE => t('Update existing'));
+      Yamm_Entity_VocabularySettings::DUPLICATE_OVERRIDE => t('Update existing'),
+    );
 
     $form['duplicate_behavior'] = array(
       '#type' => 'radios',
       '#title' => t('Duplicates handling'),
       '#options' => $options,
       '#description' => t('Define what behavior the the entity should adopt when vocabulary name conflicts with an existing one. Beware, if more than one duplicate is found, the algorithm won\'t merge but will create a new one instead.'),
-      '#default_value' => $this->get('duplicate_behavior', Yamm_EntityVocabularySettings::DUPLICATE_IGNORE));
+      '#default_value' => $this->get('duplicate_behavior', Yamm_EntityVocabularySettings::DUPLICATE_IGNORE),
+    );
 
     return $form;
   }
 
   /**
    * (non-PHPdoc)
-   * @see www/sites/all/modules/custom/yamm/yamm_api/Yamm_EntitySettingsAbstract#formValidate()
+   * @see Yamm_EntitySettingsAbstract::formValidate()
    */
   public function formValidate($values) {
     // Nothing to validate
@@ -45,7 +47,7 @@ class Yamm_Entity_VocabularySettings extends Yamm_EntitySettingsAbstract {
 
   /**
    * (non-PHPdoc)
-   * @see www/sites/all/modules/custom/yamm/yamm_api/Yamm_EntitySettingsAbstract#formSubmit($values)
+   * @see Yamm_EntitySettingsAbstract::formSubmit()
    */
   public function formSubmit($values) {
     $this->set('duplicate_behavior', (int) $values['duplicate_behavior']);
@@ -53,13 +55,13 @@ class Yamm_Entity_VocabularySettings extends Yamm_EntitySettingsAbstract {
 }
 
 /**
- * Simple vocabulary Yamm_Entity implementation
+ * Vocabulary entity implementation.
  */
-class Yamm_Entity_Vocabulary extends Yamm_Entity {
-
+class Yamm_Entity_Vocabulary extends Yamm_Entity
+{
   /**
    * (non-PHPdoc)
-   * @see www/sites/all/modules/custom/yamm/yamm_api/Entity#_objectLoad($identifier)
+   * @see Yamm_EntityAbstract::_objectLoad()
    */
   protected function _objectLoad($vid) {
     return taxonomy_vocabulary_load((int) $vid);
@@ -67,7 +69,7 @@ class Yamm_Entity_Vocabulary extends Yamm_Entity {
 
   /**
    * (non-PHPdoc)
-   * @see www/sites/all/modules/custom/yamm/yamm_api/Entity#_constructDependencies($object)
+   * @see Yamm_EntityAbstract::_constructDependencies()
    */
   protected function _constructDependencies($vocabulary) {
     // No dependencies
@@ -75,7 +77,7 @@ class Yamm_Entity_Vocabulary extends Yamm_Entity {
 
   /**
    * (non-PHPdoc)
-   * @see www/sites/all/modules/custom/yamm/yamm_api/Entity#_save($object)
+   * @see Yamm_EntityAbstract::_save()
    */
   protected function _save($vocabulary) {
     $edit = (array) $vocabulary;
@@ -96,7 +98,7 @@ class Yamm_Entity_Vocabulary extends Yamm_Entity {
 
   /**
    * (non-PHPdoc)
-   * @see www/sites/all/modules/custom/yamm/yamm_api/Entity#_update($object, $identifier)
+   * @see Yamm_EntityAbstract::_update()
    */
   protected function _update($vocabulary, $vid) {
     $edit = (array) $vocabulary;
