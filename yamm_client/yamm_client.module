@@ -60,16 +60,6 @@ function _yamm_client_cron_helper_purge_transaction($tick = 0) {
   }
 
   db_query("DELETE FROM {yamm_client_transaction} WHERE updated < %d", array($tick));
-
-  // Clean timeouted jobs
-  $jobs = array();
-  $result = db_query("SELECT job_id FROM {datasync_jobs} WHERE type = '%s' AND phase <> '%s' AND completed = 0 AND started < %d", array('yamm_sync', 'datasync_added', $tick));
-  while ($data = db_fetch_object($result)) {
-    $jobs[] = $data->job_id;
-  }
-  if (! empty($jobs)) {
-    yamm_api_clean_datasync(array('job_id' => $jobs));
-  }
 }
 
 /**
@@ -269,7 +259,7 @@ function yamm_client_push_cb($user, $pass, $server_url, $tid, $method) {
 }
 
 /**
- * Run a batched operation using datasync module.
+ * Run a batched operation.
  * This is the main server push router.
  *
  * Returns TRUE if the client knows the method, NOT IN CASE OF SUCCESS.
@@ -279,7 +269,6 @@ function yamm_client_push_cb($user, $pass, $server_url, $tid, $method) {
  */
 function yamm_client_route_method($method) {
   if (yamm_api_push_method_exists($method)) {
-    // datasync_job_add($method, NULL);
     return TRUE;
   }
   else {

@@ -204,8 +204,6 @@ function yamm_api_flush_caches() {
 /**
  * Get hard-coded known client <-> server methods
  * For push only purposes.
- *
- * All this methods should be client-implemented datasync jobs.
  */
 function yamm_api_push_methods() {
   return array(
@@ -454,16 +452,6 @@ function yamm_api_hello_cb() {
 function yamm_api_clean() {
   module_invoke_all('yamm_api_clean');
 }
-
-/**
- * Implementation of hook_yamm_api_clean().
- * TODO maybe something here later.
- */
-/*
-function yamm_api_yamm_api_clean() {
-  yamm_api_clean_datasync(array('type' => array('yamm_sync')));
-}
-*/
 
 /**
  * Is the code running in debug mode?

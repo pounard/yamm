@@ -11,10 +11,6 @@
  */
 function yamm_client_install() {
   drupal_install_schema('yamm_client');
-
-  // Build datasync configuration
-  module_load_include('module', 'yamm_api', 'yamm_api');
-  yamm_api_rebuild_datasync(array('yamm_sync'));
 }
 
 /**

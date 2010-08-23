@@ -37,7 +37,7 @@ function yamm_client_settings($form_state) {
       21600 => t('12 hours'),
       86400 => t('1 day')),
     '#default_value' => variable_get(YAMM_CLIENT_TRANSACTION_LIFETIME, 0),
-    '#description' => t("At each cron run, transaction older than this will be set as 'timeouted' and corresponding DataSync jobs will be set as failed."));
+    '#description' => t("At each cron run, transaction older than this will be set as 'timeouted'."));
 
   return system_settings_form($form);
 }

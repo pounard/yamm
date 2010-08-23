@@ -2,8 +2,7 @@
 // $Id: TransactionHelper.php,v 1.1 2010/05/12 16:20:39 pounard Exp $
 
 /**
- * Yamm client synchronization job implementation. This no longer relies on
- * DataSync module.
+ * Yamm client synchronization job implementation.
  */
 class Yamm_TransactionHelper
 {
