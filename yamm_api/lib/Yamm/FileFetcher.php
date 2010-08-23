@@ -12,25 +12,37 @@ class Yamm_FileFetcher_CouldNotFetchException extends Yamm_EntityException {}
 class Yamm_FileFetcher_CouldNotSaveException extends Yamm_EntityException {}
 
 /**
+ * Default file fetcher interface.
+ */
+interface Yamm_FileFetcherInterface
+{
+  /**
+   * Fetch file from server.
+   * 
+   * @param object $file
+   *   Drupal core file database row. Fid will be ignored in all cases. This
+   *   object will be modified and will contain the final new file path.
+   * @param boolean $replace = FALSE
+   *   (optional) If set to TRUE, and filepath is set, the existing file will
+   *   be replaced.
+   * 
+   * @throws Yamm_FileFetcher_CouldNotFetchException
+   *   If file could not be fetched.
+   * @throws Yamm_FileFetcher_CouldNotSaveException
+   *   If file coulnd not be saved.
+   */
+  public function fetch($file, $dest = 0, $replace = FALSE);
+}
+
+/**
  * Default file fetcher.
  */
-abstract class Yamm_FileFetcher
+abstract class Yamm_FileFetcher implements Yamm_FileFetcherInterface
 {
-	/**
-	 * Fetch file from server.
-	 * 
-	 * @param object $file
-	 *   Drupal core file database row. Fid will be ignored in all cases. This
-	 *   object will be modified and will contain the final new file path.
-	 * @param boolean $replace = FALSE
-	 *   (optional) If set to TRUE, and filepath is set, the existing file will
-	 *   be replaced.
-	 * 
-	 * @throws Yamm_FileFetcher_CouldNotFetchException
-	 *   If file could not be fetched.
-	 * @throws Yamm_FileFetcher_CouldNotSaveException
-	 *   If file coulnd not be saved.
-	 */
+  /**
+   * (non-PHPdoc)
+   * @see Yamm_FileFetcherInterface::fetch()
+   */
 	public function fetch($file, $dest = 0, $replace = FALSE) {
 		// Fetch the real file as a temporary file.
 		$src = $this->_fetch($file->filepath);

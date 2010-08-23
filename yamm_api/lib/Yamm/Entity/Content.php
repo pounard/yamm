@@ -96,32 +96,69 @@ class Yamm_Entity_Content extends Yamm_Entity
   }
 
   /**
-   * (non-PHPdoc)
+   * Slightly change the default signature, in order to pragmatically add the
+   * content type name in order to use it as update function.
+   * 
+   * Because content types won't have a changing name among sites (on the
+   * opposite as other entities which has incremented identifiers instead
+   * of user set canonical name) we can afford to do an intelligent function
+   * that will guess itself whatever it has to do.
+   * 
    * @see Entity::_save()
    */
-  protected function _save($export) {
-    // Get back content type
-    preg_match('/\'type\'[ ]+=>[ ]+\'([a-zA-Z0-9-_]+)\'/', $export, $matches);
-    $type_name = $matches[1];
+  protected function _save($export, $type_name = NULL) {
+    // Basic behavior options.
+    $overwrite = FALSE;
 
-    // Same comment as upper, you totally rocks guys
-    $values = array('type_name' => '<create>', 'macro' => $export, 'op' => 'Submit');
+    switch ($this->getSettings()->get('contentBehavior', Yamm_Entity_ContentSettings::MODULE_OVERRIDE)) {
+      case Yamm_Entity_ContentSettings::MODULE_IGNORE:
+        return;
+
+      case Yamm_Entity_ContentSettings::MODULE_OVERRIDE:
+        // Let the algorigthm do its default job, which is saving the current
+        // content type whatever it exists or not.
+        $overwrite = TRUE;
+        break;
+
+      case Yamm_Entity_ContentSettings::MODULE_OVERRIDEFALLBACK:
+        // FIXME: Todo.
+        break;
+
+      case Yamm_Entity_ContentSettings::MODULE_TRYENABLE:
+      default:
+        // FIXME: Todo.
+        break;
+    }
+
+    // Get back content type name.
+    if (! $type_name) {
+      preg_match('/\'type\'[ ]+=>[ ]+\'([a-zA-Z0-9-_]+)\'/', $export, $matches);
+      $type_name = $matches[1];
+    }
+
+    // Check that type already exists on client side, if yes, overwrite it.
+    $type_exists = db_result(db_query("SELECT 1 FROM {node_type} WHERE name = '%s'", $type_name));
+    $values = array('macro' => $export, 'op' => 'Submit');
+    $values['type_name'] = $type_exists ? $type_name : '<create>';
+
+    // Save the content type using the content_copy module.
     $form_state['values'] = $values;
     drupal_execute('content_copy_import_form', $form_state);
 
+    // Check for errors during creation or update.
     if ($errors = form_get_errors()) {
       foreach ($errors as $error) {
         $msg .= "$error ";
       }
-      watchdog('entity_content', "Error during content import @msg", array("@msg" => $msg));
+      watchdog('entity_content', "Error during content import @msg", array("@msg" => $msg), WATCHDOG_ERROR);
     }
 
-    // Aptempt to clear form cache
+    // Attempt to clear form cache.
     cache_clear_all(NULL, 'cache_form');
     form_set_error(NULL, '', TRUE);
 
-    // This will store content type latest definition
-    cache_set('content_entity_' . $type_name, md5($export), $table = 'yamm_data_store', $expire = CACHE_PERMANENT);
+    // This will store content type latest definition.
+    cache_set('content_entity_' . $type_name, md5($export), 'yamm_data_store', CACHE_PERMANENT);
 
     return $type_name;
   }
@@ -142,24 +179,8 @@ class Yamm_Entity_Content extends Yamm_Entity
         return;
       }
     }
-
-    $values = array('type_name' => $type_name, 'macro' => $export, 'op' => 'Submit');
-    $form_state['values'] = $values;
-    drupal_execute('content_copy_import_form', $form_state);
-
-    if ($errors = form_get_errors()) {
-      foreach ($errors as $error) {
-        $msg .= "$error ";
-      }
-      watchdog('entity_content', "Error during content import @msg", array("@msg" => $msg));
-    }
-
-    // Aptempt to clear form cache
-    cache_clear_all(NULL, 'cache_form');
-    form_set_error(NULL, '', TRUE);
-
-    // This will store content type latest definition
-    cache_set('content_entity_' . $type_name, md5($export), $table = 'yamm_data_store', $expire = CACHE_PERMANENT);
+    
+    return $this->_save($export, $type_name);
   }
 
   /**
@@ -179,24 +200,6 @@ class Yamm_Entity_Content extends Yamm_Entity
     $data = cache_get('content_entity_' . $type_name, $table = 'yamm_data_store');
     $old_hash = $data->data;
     $new_hash = md5($new_export);
-/*
-    switch ($this->getSettings()->get('contentBehavior')) {
-      case Yamm_Entity_ContentSettings::MODULE_IGNORE:
-      	return;
-
-      case Yamm_Entity_ContentSettings::MODULE_OVERRIDE:
-      	// FIXME: Todo.
-      	break;
-
-      case Yamm_Entity_ContentSettings::MODULE_OVERRIDEFALLBACK:
-      	// FIXME: Todo. 
-      	break;
-
-      case Yamm_Entity_ContentSettings::MODULE_TRYENABLE:
-      default:
-      	// FIXME: Todo.
-      	break;
-    } */
 
     if ($old_hash != $new_hash) {
       // Duplicate content, change its name

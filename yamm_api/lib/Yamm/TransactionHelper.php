@@ -108,8 +108,9 @@ class Yamm_TransactionHelper
     yamm_api_debug("Transaction " . $this->_tid . " running");
 
     try {
-      $this->_entityFetcher = new Yamm_EntityFetcher_Xmlrpc($this->_server->getUrl(), $this->_tid);
-      $this->_entityParser = new Yamm_EntityParser($this->_entityFetcher);
+      $fetcher = new Yamm_EntityFetcher_Xmlrpc($this->_server->getUrl(), $this->_tid);
+      $fileFetcher = new Yamm_FileFetcher_Http();
+      $this->_entityParser = new Yamm_EntityParser($fetcher, $fileFetcher);
       $this->_entityParser->parse();
 
       module_invoke_all('yamm_sync_finished');

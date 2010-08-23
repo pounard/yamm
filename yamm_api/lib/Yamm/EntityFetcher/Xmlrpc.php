@@ -4,7 +4,7 @@
 /**
  * XML/RPC custom fetcher.
  */
-class Yamm_EntityFetcher_Xmlrpc extends Yamm_EntityFetcherAbstract
+class Yamm_EntityFetcher_Xmlrpc extends Yamm_EntityFetcher
 {
   /**
    * Master URL.
@@ -76,7 +76,7 @@ class Yamm_EntityFetcher_Xmlrpc extends Yamm_EntityFetcherAbstract
 
   /**
    * (non-PHPdoc)
-   * @see Yamm_EntityFetcherAbstract::_pull()
+   * @see Yamm_EntityFetcher::_pull()
    */
   protected function _pull() {
     return $this->__getEntities('yamm.client.pull');
@@ -84,7 +84,7 @@ class Yamm_EntityFetcher_Xmlrpc extends Yamm_EntityFetcherAbstract
 
   /**
    * (non-PHPdoc)
-   * @see Yamm_EntityFetcherAbstract::_fetchDependencies()
+   * @see Yamm_EntityFetcher::_fetchDependencies()
    */
   protected function _fetchDependencies(array &$uuid_array) {
     return $this->__getEntities('yamm.client.pull.dependencies', $uuid_array);

@@ -250,7 +250,7 @@ function yamm_client_push_cb($user, $pass, $server_url, $tid, $method) {
         yamm_client_transaction_create($tid, $server_url);
         // Last update parameter will allow the server to filter content
         // that has been modified only since the given timestamp.
-        $ret['last_update'] = db_result(db_query("SELECT created FROM {yamm_transaction} WHERE server_url = '%s'", $server_url));
+        $ret['last_update'] = db_result(db_query("SELECT created FROM {yamm_client_transaction} WHERE server_url = '%s'", $server_url));
         $ret['status'] = YAMM_TRANSACTION_STATUS_WAITING;
       }
       else {

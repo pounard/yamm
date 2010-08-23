@@ -411,6 +411,27 @@ abstract class Yamm_Entity
   }
 
   /**
+   * @var Yamm_EntityParser
+   */
+  private $__parser;
+
+  /**
+   * Get current entity parser, in case we are manipulating the entity in
+   * the client side of the pulling process context.
+   * 
+   * @return Yamm_EntityParser
+   * 
+   * @throws Yamm_Exception
+   *   If entity is not in the client side pulling process.
+   */
+  public function getParser() {
+    if (!isset($this->__parser)) {
+      throw new Yamm_EntityException("Not in client side pulling context");
+    }
+    return $this->__parser;
+  }
+
+  /**
    * Internal type.
    * 
    * @var string
@@ -542,11 +563,14 @@ abstract class Yamm_Entity
    * @return Yamm_Entity
    *   Any class subclassing Yamm_Entity.
    */
-  protected function __construct($uuid) {
+  protected function __construct($uuid, Yamm_EntityParser $parser = NULL) {
     $this->__uuid = $uuid;
     $uuid_data = yamm_api_uuid_load($uuid);
     $this->__identifier = $uuid_data->identifier;
     $this->__setTypeFromClass();
+    if ($parser) {
+      $this->__parser = $parser;
+    }
     if (! $object = $this->_objectLoad($this->__identifier)) {
       throw new Yamm_Entity_UnableToLoadObjectException("Return object is null for type " . $this->__type . " and identifier " . $this->__identifier . ".");
     }

@@ -420,17 +420,20 @@ function yamm_api_uuid_get($type, $identifier) {
   return db_result(db_query("SELECT uuid FROM {yamm_uuid} WHERE type = '%s' and identifier = '%s' LIMIT 1", $type, $identifier));
 }
 
+/**
+ * Bootstrap entity subsystem, load all needed PHP files.
+ */
 function yamm_api_bootstrap_entity() {
   static $loaded = FALSE;
   if (! $loaded) {
     require_once dirname(__FILE__) . '/lib/Yamm/Entity.php';
-    require_once dirname(__FILE__) . '/lib/Yamm/EntityFetcherInterface.php';
-    require_once dirname(__FILE__) . '/lib/Yamm/EntityFetcherAbstract.php';
+    require_once dirname(__FILE__) . '/lib/Yamm/EntityFetcher.php';
     require_once dirname(__FILE__) . '/lib/Yamm/EntityParser.php';
     // Include the default entity fetcher, because no other implementation
     // exists right now.
     require_once dirname(__FILE__) . '/lib/Yamm/Server.php';
     require_once dirname(__FILE__) . '/lib/Yamm/FileFetcher.php';
+    require_once dirname(__FILE__) . '/lib/Yamm/FileFetcher/Http.php';
     require_once dirname(__FILE__) . '/lib/Yamm/Server.php';
     require_once dirname(__FILE__) . '/lib/Yamm/TransactionHelper.php';
     require_once dirname(__FILE__) . '/lib/Yamm/EntityFetcher/Xmlrpc.php';

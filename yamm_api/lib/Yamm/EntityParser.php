@@ -9,20 +9,42 @@ class Yamm_EntityParserNoFetcherException extends Yamm_EntityException {}
 class Yamm_EntityParser
 {
   /**
-   * Fetcher instance.
-   * 
-   * @var Yamm_EntityFetcherAbstract
+   * @var Yamm_EntityFetcherInterface
    */
-  protected $_fetcher = NULL;
+  protected $_fetcher;
+
+  /**
+   * Get fetcher.
+   * 
+   * @return Yamm_EntityFetcherInterface
+   */
+  public function getFetcher() {
+    return $this->_fetcher;
+  }
+
+  /**
+   * @var Yamm_FileFetcherInterface
+   */
+  protected $_fileFetcher;
+
+  /**
+   * Get file fetcher.
+   * 
+   * @var Yamm_FileFetcherInterface
+   */
+  public function getFileFetcher() {
+    return $this->_fileFetcher;
+  }
 
   /**
    * Main constructor.
    *
-   * @param Yamm_EntityFetcherAbstract $fetcher
+   * @param Yamm_EntityFetcherInterface $fetcher
    *   Fetcher to use for this parsgin.
    */
-  public function __construct(Yamm_EntityFetcherInterface $fetcher) {
+  public function __construct(Yamm_EntityFetcherInterface $fetcher, Yamm_FileFetcherInterface $fileFetcher) {
     $this->_fetcher = $fetcher;
+    $this->_fileFetcher = $fileFetcher;
   }
 
   /**
