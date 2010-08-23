@@ -1,0 +1,58 @@
+$Id: TODO.txt,v 1.5.2.2 2010/05/12 15:38:42 pounard Exp $
+Yamm todo list
+==============
+
+Latest stuff (important)
+------------------------
+ * Create a view filter which says "update is more recent than last uuid". This
+   will allow incremental updates. Dependency fetching should also be capable of
+   returning such message as "entity has not been updated" instead of sending
+   pragmatically all dependencies.
+ * Handle properly object deletion on client side (clean uuid). This means more
+   Drupal hooks implementation for common types.
+ * Client should check for DNS/server base url matching when receiving an order
+   to avoid security issues or DDoS attacks.
+ * When pushing to a client, allow site admin to select profile.
+ * Allow admin to select a default profile per client.
+ * Content copy should not be required, and node export should fail if type is
+   unknown and content copy is disabled.
+ * Client error reporting should be more precise, and should give back erroneous
+   entity uuid to server, plus a message or an error code.
+ * Implement a view display plugin in order to ensure our views are meant to be
+   used with profiles.
+ * Finish views sharing (should be a fun feature!).
+ * If server is configured to change users password, and send the configured
+   client user password, it should also update its own configuration to be able
+   to send it data later.
+ * Server profile handling should be rewrote in order to match new naming
+   conventions.
+
+Done
+----
+ * Add last update time into yamm_uuid table.
+ * Change "server" configuration option in client by "allowed servers" with a
+   list or one or more server.
+ * Add the server url in client transaction table.
+ * Server should send its own base url as a parameter when pushing the order to
+   client so the client would now on which server it should fetch data.
+
+Client handling
+---------------
+ * Add profile select box into client overview page for pulling
+ * Implement reporting on jobs (number of object saved/updated)
+
+All
+---
+ * Implement hook_requirements() for tricky part configuration checks
+     - Check server has (default) profile
+     - Check server has client(s)
+     - Check client has server
+
+Server
+------
+ * Spec and implement a scheduler using hook_cron()
+
+Cron
+----
+ * For server, purge old transactions
+ * For client, check jobs has timeouted, and clean them

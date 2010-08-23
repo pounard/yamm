@@ -1,0 +1,123 @@
+<!-- $Id: api-hooks.html,v 1.4 2010/03/24 00:45:43 pounard Exp $ -->
+
+<h3>Provided Hooks</h3>
+
+<p>This module is not enought hookable now, but we still provide experimental
+hooks.</p>
+
+<p>These hooks have been created for us to do some specific business stuff that
+does not have their place in the framework core.</p>
+
+<p>There are two hooks you can use, first one is used to register custom
+entities. The one other is a polymorphic hook, and is here to provide some
+content alteration at save, update and dependency construct time.</p>
+
+<h3>hook_yamm()</h3>
+
+<p>This hook is an helper that allows you to register your own entities.
+This hook must return an array such as:</p>
+
+<pre>function mymodule_yamm() {
+  return array(
+    'foo' =&gt; array(
+      'name' =&gt; t('Foo),
+      'base_table' =&gt; 'foo_table',
+      'module' =&gt; 'mymodule')
+    'bar' =&gt; array(
+      'name' =&gt; t('Bar'),
+      'module' =&gt; 'mymodule), 
+  );
+}</pre>
+
+<p>Where keys are internal object type.</p>
+
+<p>In this exemple, we register two <i>Entity</i> subclasses, first one will be
+<i>FooEntity</i>, second one will be <i>BarEntity</i>.</p>
+
+<p>You have to put theses classes into the <b>entities/</b> subdir of your
+custom module.
+<br/>
+PHP file containing the classes must be named <b>entity_&lt;type&gt;.inc</b>
+(so yours will be <i>entity_foo.inc</i> and <i>entity_bar.inc</i>).
+<br/>
+The <b>name</b> element is mandatory, it will be used in settings forms. This
+must be a human readable localized name for your entity.</p>
+
+<p>The <b>base_table</b> refers to views base table used to fetch objects.
+Remember that you MUST NOT use an already defined <i>base_table</i>.
+<br/>
+This parameter is optional. If you dont specify a base table, then your entity
+can be still used as another entity dependency.</p>
+
+<h3>hook_yamm_api_clean()</h3>
+
+<p>This hook is ran when the site administrator presses the <cite>Clean
+state</cite> button in the <cite>Common options</cite> section of Yamm 
+settings pages.</p>
+
+<pre>function mymodule_yamm_api_clean() {
+  // Do stuff
+}</pre>
+
+<p>The original implementation meant to clean up all DataSync jobs when running
+massing tests, for debuging purposes. You can implement any clean task here. For
+example, <cite>yamm_client</cite> modules does wipe out all running transactions
+and remove all timeouted jobs from DataSync when this hook is invoked.</p>
+
+<h3>hook_yamm_entity_alter($op, $type, $identifier, $object, $data = NULL)</h3>
+
+<p>Parameters are:</p>
+<ul>
+  <li><b>$op</b>: When does the core is executing the hook.
+    <br/>
+    Can be <i>post_construct</i>, <i>post_update</i> or <i>post_save</i></li>
+  <li><b>$type</b>: Internal object type (defined by <i>hook_yamm()</i>).</li>
+  <li><b>$identifier</b>: Internal object identifier.</li>
+  <li><b>$object</b>: Object loaded by <i>Entity-&gt;_objectLoad()</i>.</li>
+  <li><b>$data</b>: Misc data, depending on the <i>$op</i>.</li>
+</ul>
+
+<p>Return values are:</p>
+<ul>
+  <li><b>'post_construct'</b>: a key =&gt; value array.</li>
+  <li><b>'post_update'</b>: void</li>
+  <li><b>'post_save'</b>: void</li>
+</ul>
+
+<h4>Operation $op = 'post_construct'</h4>
+
+<p><b>This hook is executed on server</b> at pull time.
+<br/>
+<b>$data</b> argument is NULL here.</p>
+
+<p>This hook is called at entity construct time. It's called within the Yamm_Entity
+class, right after the <i>_constructDependencies()</i> method.</p>
+
+<p>What you can do here, is adding some data (it's a hook that allow you to
+alter internal data registry, commonly used with <i>_setData()</i> and
+<i>_getData()</i> methods).</p>
+
+<p>This hook should return an key =&gt; value array of data to add to registry.
+Note that for consistency, existing values won't be overriden.</p>
+
+<h4>Operation $op = 'post_update'</h4>
+
+<p><b>This hook is executed on client</b> when parsing the entity dependency
+tree.
+<br/>
+<b>$data</b> argument contains values you saved in <b>post_construct</b>, mixed
+will all other modules data, please avoid conflict names.</p>
+
+<p>Ok, just do whatever you want here, alter some content, plant the bomb into
+your Drupal. What you are going to destroy here is none of my business.</p>
+
+<h4>Operation $op = 'post_save'</h4>
+
+<p><b>This hook is executed on client</b> when parsing the entity dependency
+tree.
+<br/>
+<b>$data</b> argument contains values you saved in <b>post_construct</b>, mixed
+will all other modules data, please avoid conflict names.</p>
+
+<p>Ok, just do whatever you wish here, alter some database, plant the bomb into
+your system. What you are going to annihilate here is none of my business.</p>

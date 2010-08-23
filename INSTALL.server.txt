@@ -1,0 +1,7 @@
+$Id: INSTALL.server.txt,v 1.3.2.2 2010/05/12 15:38:42 pounard Exp $
+
+Installing Yamm server
+======================
+
+Yamm server does not depend on any system library. You only have to check the
+yamm_server module in your module administration section.

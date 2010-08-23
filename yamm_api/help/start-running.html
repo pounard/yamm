@@ -1,0 +1,39 @@
+<!-- $Id: start-running.html,v 1.3 2009/11/05 20:19:36 pounard Exp $ -->
+
+<h3>Manually run the push order</h3>
+
+<p>We are going to manually run synchronization order.
+<br/>
+Go to the client list page, in the <i>Operations</i> row cell, click on
+<i>Overview</i>.</p>
+
+<p>On the new page, in the <i>Push method</i> fieldset, select <i>Full content
+synchronization job</i>. Press the <i>Push</i> button.</p>
+
+<p>If client was correctly set-up, you'll see the message <i>New transaction
+created, waiting for client to finish.</i></p>
+
+<h3>What happens, my client does nothing!</h3>
+
+<p>In fact, this is quite normal. The push order makes the client create a new
+DataSync job. This job will be ran when you configured DataSync to do it,
+default DataSync behavior is to run the system PHP CLI thread as soon as it can,
+understand at next client side cron run.</p>
+
+<p>You can monitor your client job by going to the DataSync jobs queue list on
+client administration pages. This list is updated at job runtime, you should be
+able to see its current status, if errors happens, etc..</p>
+
+<p>After you ran the push order, to see results you'll need to run client side
+cron until the queued job in DataSync job list is in <i>Running</i> state.
+<br/>
+Because all the job works in a single SQL transaction, you won't see any results
+if the job fail, or until the job has finished properly.</p>
+
+<h3>Some notes</h3>
+
+<p>If you push the syncrhonization order many times, the client will send an OK
+status the first time, then a fail status all the others, until it finished or
+failed the first one you created. To manually cancel a ghosted job, you'll have
+to use Drush in order to cancel it properly, and clean the client transaction
+database to free the client.</p>

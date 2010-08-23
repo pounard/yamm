@@ -1,0 +1,33 @@
+<!-- $Id: advanced-debug.html,v 1.1 2009/11/05 20:19:36 pounard Exp $ -->
+
+<h3>Debug synchronisation job</h3>
+
+<p>In <b>Administer &gt; Yamm &gt; Common options</b> you will find the
+<cite>Debug mode</cite> option. By enabling this option, <cite>Entity
+parser</cite> will provide <b>a lot</b> of output.</p>
+
+<p>You can find this output in two different places:</p>
+
+<dl>
+  <dt>Watchdog</dt>
+  <dd>Go to <b>Administer &gt; Reports &gt; Recent log entries</b> to find
+  them logged through watchdog.</dd>
+
+  <dt>Raw output with DataSync</dt>
+  <dd>If you are manually running DataSync in CLI mode with its debug option in
+  command-line arguments, the <cite>Entity Parser</cite> will output all its
+  debug into <em>stdout</em>. Note that it will also log it to watchdog.</dd>
+</dl>
+
+<p>If you enable the <cite>DataSync backtrace</cite> module, which is currently
+in active development, you should also be able to catch a lot of DataSync events
+and associated PHP errors or exceptions through DataSync admin settings pages.
+</p>
+
+<h3>Run massive test and wipe them out</h3>
+
+<p>In <b>Administer &gt; Yamm &gt; Common options</b> you will find the
+<cite>Clean state</cite> button. The submit function behind will run the
+<cite>hook_yamm_api_clean()</cite>, which per default will wipe out all
+DataSync jobs that any enabled <cite>Yamm</cite> submodule could have
+queued.</p>

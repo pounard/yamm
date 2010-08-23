@@ -1,0 +1,139 @@
+<!-- $Id: start-configuration.html,v 1.3 2009/11/05 20:19:36 pounard Exp $ -->
+
+<p>Now that you set up both Drupal environment, we are going to set up client
+and server.</p>
+
+<h3>Client set-up</h3>
+
+<p>The client does not have any set-up to do. All information that it needs will
+be sent by server. The only mandatory configuration step is to tell it which
+server will push synchronization orders.</p>
+
+<p>Go to <b>Administer &gt; Yamm &gt; Server</b>.</p>
+
+<p>On this configuration form, input the server HTTP root path. If your server
+is hosted at the following URL <i>http://my.server.tld</i>, you could write all
+of these, with or without trailing slash:</p>
+
+<ul>
+  <li>http://my.server.tld</li>
+  <li>my.server.tld</li>
+</ul>
+
+<p>Prefer the last one, the module will generate the right full URL itself.</p>
+
+<h3>Server set-up</h3>
+
+<h4>Register our client</h4>
+
+<p>First thing to do is register our client. Go to <b>Administer &gt; Yamm &gt;
+Client list</b>.</p>
+
+<p>In the <i>Operations</i> fieldset, select <i>Add new item</i> then click the
+<i>Update</i> button.</p>
+
+<p>Input here:</p>
+<ul>
+  <li><b>Internal name</b>: this is the unique identifier of your client;</li>
+  <li><b>Client base url</b>: this is the HTTP server root path URL. If your
+    client URL is <i>http://my.client.tld/foo</i> then type in
+    <i>my.client.tld/foo</i>;</li>
+  <li><b>Username</b>: type here the username on a client side account which
+    has the <i>launch sync jobs</i> permission;</li>
+  <li><b>Password</b>: this is the client side user password. This password
+    won't be saved in database, only a md5 hash will be kept.</li>
+</ul>
+
+<p>Press the <i>save</i> button and return to the client list.</p>
+
+<h4>Test if client responds</h4>
+
+<p>On the client list page, you should see a new line with your client. On the
+<i>Operations</i> cell, you have a <i>Test</i> link, click it.</p>
+
+<p>If everything is OK, you should see the message: <i>Communication OK</i>
+displayed on top of the page.
+<br/>
+If this message does not appear, then you have a wrong installation. This test
+link send a simple XML-RPC message on which the client should just returns
+<i>TRUE</i>.
+<br/>
+To fix it, try to access manually to <i>http://my.client.tld/foo/xmlrpc.php</i>
+and to <i>http://my.server.tld/xmlrpc.php</i>. If both works, then this test
+will work. 
+</p>
+
+<h4>Create a view</h4>
+
+<p>In order to use a profile, you need to describe which data you are going to
+synchronize.
+<br/>
+This data description take the form of a <i>view</i>. This allows you to make a
+complex filter of data to synchronize.</p>
+
+<p>The <b>view</b> you are going to create <b>must rely on a known entity base
+table</b>. For the example, you could start with a <i>node</i> based view.</p>
+
+<p>How to make a working view, refers to the <b>views module documentation</b>,
+and apply those rules:</p>
+
+<ul>
+  <li>First, <b>use the default display</b>. This limitation will disapear in
+    the future;</li>
+  <li>Put your <b>display mode into fields display</b>, and <b>set up only one
+    field</b> in field list, the <b>unique identifier</b> of your data (<i>Node
+    NID</i> for <i>node</i>, <i>Term identifier TID</i> for <i>term</i>);</li>
+  <li>Do not set any limit or pager, this settings will be overriden when
+    view will be executed;</li>
+  <li><b>You should set an order</b>, else the SQL query can give random order,
+    then wrong results when executed more than once;</li>
+  <li>Construct the filter you want, there is no limitation here. <b>This filter
+    describe the data</b> you want to send to clients.</li>
+</ul>
+
+<p>When your view is finished, save it.</p>
+
+<h4>Create a new profile</h4>
+
+<p>Go to <b>Administer &gt; Yamm &gt; Profiles overview</b>.</p>
+
+<p>In the <i>Operations</i> fieldset, select <i>Add new item</i> then click the
+<i>Update</i> button.</p>
+
+<p>Input here:</p>
+<ul>
+  <li><b>Internal name</b>: this is the unique identifier of your profile;</li>
+  <li><b>Profile name</b>: this is a human readable name for your profile;</li>
+  <li><b>Views that export content</b>: input here a <b>list of views internal
+    names</b>, one line per view name.</li>
+</ul>
+
+<p>Press the <i>save</i> button and return to the profiles overview page.</p>
+
+<h4>Configuring profile</h4>
+
+<p>On the profiles overview page, you can see a list of radio boxes, one per
+line. Those radio boxes, like the <i>input formats</i> settings page allows you
+to select a <b>default profile</b>, used for synchronization tasks.
+<br/>
+Note that in the future, you'll be able to configure one profile per client.
+At this time, only the default profile is being used at pull time.
+</p>
+
+<p>Select the radio box on your new profile line, in the <i>Operations</i>
+fieldset select <i>Set selected as default</i> then click <i>Update</i>.</p>
+
+<p>Now that your profile is set as default, you are going to configure entities
+behavior. Each entity can define a set of options to control update or save
+behavior. Each set of entity settings is saved on a per profile basis.</p>
+
+<p>On the line where your profile appears, click the <i>Edit</i> link. On the
+profile edit form, click on the <i>Entities settings</i> tab.</p>
+
+<p>Select here options that make sens to you, then click the <i>Submit</i>
+button.</p>
+
+<h4>And then?</h4>
+
+<p>Now, your environment is ready to do synchronization. You should fill it with
+arbitrary content, and proceed to the next step.</p>

@@ -1,0 +1,16 @@
+<!-- $Id: advanced-scheduler.html,v 1.3 2009/11/05 20:19:36 pounard Exp $ -->
+
+<p>Yamm module embed a server-side scheduler which will allow you to send
+scheduled synchronization orders to clients.
+<br/>
+This scheduler is implemented using a DataSync job (may be a simple cron
+run in future, but always prefer the DataSync job if you can use it).
+<br/>
+The job is simple, it sends a push order to all registered clients that
+have are in <i>activated</i> state.</p>
+
+<p>To use it, enable the <b>Yamm scheduler</b> module, on the server Drupal
+instance.
+<br/>
+To schedule the job execution, <b>refers to DataSync module documentation</b>
+on how to set up a scheduled job.</p>

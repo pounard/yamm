@@ -1,0 +1,14 @@
+; $Id: yamm_img.info,v 1.2 2010/05/12 15:38:43 pounard Exp $
+name = Yamm IMG
+description = Aptempt to copy files referenced by <img> tag from server when copying nodes
+package = Yamm
+dependencies[] = yamm_api
+core = 6.x
+php = 5.1
+
+; Information added by drupal.org packaging script on 2010-03-26
+version = "6.x-2.0-alpha2"
+core = "6.x"
+project = "yamm"
+datestamp = "1269561743"
+

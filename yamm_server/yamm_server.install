@@ -1,0 +1,246 @@
+<?php
+// $Id: yamm_server.install,v 1.4 2010/05/12 15:38:43 pounard Exp $
+
+/**
+ * @file
+ * Yamm server schema
+ */
+
+/**
+ * Implementation of hook_install().
+ */
+function yamm_server_install() {
+  drupal_install_schema('yamm_server');
+}
+
+/**
+ * Implementation of hook_uninstall().
+ */
+function yamm_server_uninstall() {
+  drupal_uninstall_schema('yamm_server');
+}
+
+/**
+ * Implementation of hook_schema().
+ */
+function yamm_server_schema() {
+  $schema = array();
+
+  $schema['yamm_server_client'] = array(
+    'fields' => array(
+      'name' => array(
+        'type' => 'varchar',
+        'length' => '128',
+        'not null' => TRUE,
+        'description' => 'Client internal name',
+      ),
+      'url' => array(
+        'type' => 'varchar',
+        'length' => '256',
+        'not null' => TRUE,
+        'description' => 'Client site url',
+      ),
+      'username' => array(
+        'type' => 'varchar',
+        'length' => 60,
+        'not null' => TRUE,
+        'default' => '',
+        'description' => 'Unique user name',
+      ),
+      'pass' => array(
+        'type' => 'varchar',
+        'length' => 32,
+        'not null' => TRUE,
+        'default' => '',
+        'description' => "User's password (md5 hash)",
+      ),
+      'status' => array(
+        'type' => 'int',
+        'size' => 'tiny',
+        'not null' => TRUE,
+        'description' => 'Last known status',
+        'default' => 1,
+      ),
+      'updated' => array(
+        'description' => 'The Unix timestamp when the information was last fetched',
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+      )
+    ),
+    'primary key' => array('name'),
+    'indexes' => array('yamm_server_client_updated_idx' => array('updated')),
+    'unique keys' => array('yamm_server_client_url' => array('url')),
+  );
+
+  $schema['yamm_server_transaction'] = array(
+    'fields' => array(
+      'tid' => array(
+        'type' => 'varchar',
+        'length' => '32',
+        'not null' => TRUE,
+        'description' => 'Transaction unique id',
+      ),
+      'client' => array(
+        'type' => 'varchar',
+        'length' => '128',
+        'not null' => TRUE,
+        'description' => 'Client name',
+      ),
+      'profile' => array(
+        'type' => 'varchar',
+        'length' => '64',
+        'not null' => TRUE,
+        'description' => 'Profile unique name used at pull time',
+      ),
+      'state' => array(
+        'type' => 'blob',
+        'not null' => FALSE,
+        'description' => 'Current state if running',
+      ),
+      'status' => array(
+        'type' => 'int',
+        'size' => 'tiny',
+        'not null' => TRUE,
+        'description' => 'Last known status',
+        'default' => 1,
+      ),
+      'manual' => array(
+        'type' => 'int',
+        'size' => 'tiny',
+        'not null' => TRUE,
+        'description' => 'Set to 1 in case of manual synchronization run, this will let clients continues transaction even if suspended',
+        'default' => 0,
+      ),
+      'updated' => array(
+        'description' => 'The Unix timestamp when the information was last fetched',
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+      'last_update' => array(
+        'description' => 'Last update time given by client, allowing incremental updates',
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+    ),
+    'primary key' => array('tid'),
+    'indexes' => array(
+      'yamm_server_transaction_updated_idx' => array('updated'),
+      'yamm_server_transaction_client_idx' => array('client'),
+    ),
+  );
+
+  $schema['yamm_server_profile'] = array(
+    'fields' => array(
+      'profile' => array(
+        'type' => 'varchar',
+        'length' => '64',
+        'not null' => TRUE,
+        'description' => 'Unique name',
+      ),
+      'name' => array(
+        'type' => 'varchar',
+        'length' => '64',
+        'not null' => TRUE,
+        'description' => 'Unique name',
+      ),
+      'data' => array(
+        'type' => 'blob',
+        'not null' => TRUE,
+        'description' => 'Serialized object',
+      ),
+    ),
+    'primary key' => array('profile'),
+    'indexes' => array('yamm_server_profile_name_idx' => array('name')),
+  );
+
+  return $schema;
+}
+
+/**
+ * Don't ask why there is no 6001 update. Let's say I was very lazzy to do an
+ * sql query to update system table because the first try failed.
+ */
+function yamm_server_update_6002() {
+  $ret = array();
+  db_add_field($ret, 'yamm_server_transaction', 'profile', array(
+    'type' => 'varchar',
+    'length' => '64',
+    'not null' => TRUE,
+    'description' => 'Profile unique name used at pull time',
+  ));
+  return $ret;
+}
+
+function yamm_server_update_6003() {
+  $ret = array();
+  db_add_field($ret, 'yamm_server_client', 'username', array(
+    'type' => 'varchar',
+    'length' => 60,
+    'not null' => TRUE,
+    'default' => '',
+    'description' => 'Unique user name',
+  ));
+  $ret[] = update_sql("UPDATE {yamm_server_client} SET username = user");
+  db_drop_field($ret, 'yamm_server_client', 'user');
+  return $ret;
+}
+
+/**
+ * See update 6002 comment.
+ */
+function yamm_server_update_6006() {
+  $ret = array();
+  db_add_field($ret, 'yamm_server_transaction', 'view', array(
+    'type' => 'int',
+    'size' => 'tiny',
+    'not null' => TRUE,
+    'description' => 'View the transaction is currently working on',
+    'default' => 0,
+  ));
+  db_add_field($ret, 'yamm_server_transaction', 'view_offset', array(
+    'type' => 'int',
+    'size' => 'tiny',
+    'not null' => TRUE,
+    'description' => 'Last known status',
+    'default' => 0,
+  ));
+  return $ret;
+}
+
+function yamm_server_update_6007() {
+  $ret = array();
+  db_drop_field($ret, 'yamm_server_transaction', 'view');
+  db_drop_field($ret, 'yamm_server_transaction', 'view_offset');
+  db_add_field($ret, 'yamm_server_transaction', 'state', array(
+    'type' => 'blob',
+    'not null' => FALSE,
+    'description' => 'Current state if running',
+  ));
+  return $ret;
+}
+
+function yamm_server_update_6008() {
+  $ret = array();
+  db_add_field($ret, 'yamm_server_transaction', 'manual', array(
+    'type' => 'int',
+    'size' => 'tiny',
+    'not null' => TRUE,
+    'description' => 'Set to 1 in case of manual synchronization run, this will let clients continues transaction even if suspended',
+    'default' => 0,
+  ));
+  return $ret;
+}
+
+function yamm_server_update_6009() {
+  $ret = array();
+  db_add_field($ret, 'yamm_server_transaction', 'last_update', array(
+    'description' => 'Last update time given by client, allowing incremental updates',
+    'type' => 'int',
+    'not null' => TRUE,
+    'default' => 0,
+  ));
+  return $ret;
+}

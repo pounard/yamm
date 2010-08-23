@@ -1,0 +1,779 @@
+# $Id: yamm.pot,v 1.1 2009/11/05 21:07:46 pounard Exp $
+#
+# LANGUAGE translation of Drupal (general)
+# Copyright YEAR NAME <EMAIL@ADDRESS>
+# --VERSIONS--
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PROJECT VERSION\n"
+"POT-Creation-Date: 2009-10-29 18:09+0100\n"
+"PO-Revision-Date: YYYY-mm-DD HH:MM+ZZZZ\n"
+"Last-Translator: NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <EMAIL@ADDRESS>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=INTEGER; plural=EXPRESSION;\n"
+
+#: additions/yamm_img/yamm_img.module:26;32;155;161
+msgid "yamm_img"
+msgstr ""
+
+#: additions/yamm_img/yamm_img.module:26
+msgid "Server advertised that download method is private, canceled image fetching"
+msgstr ""
+
+#: additions/yamm_img/yamm_img.module:32
+msgid "Yamm IMG module seems deactivated on server, trying anyway"
+msgstr ""
+
+#: additions/yamm_img/yamm_img.module:155
+msgid "Could not save image '@source'"
+msgstr ""
+
+#: additions/yamm_img/yamm_img.module:161
+msgid "Could not get image '@source' from server"
+msgstr ""
+
+#: additions/yamm_img/yamm_img.info:0
+msgid "Yamm IMG"
+msgstr ""
+
+#: additions/yamm_img/yamm_img.info:0
+msgid "Aptempt to copy files referenced by <img> tag from server when copying nodes"
+msgstr ""
+
+#: additions/yamm_img/yamm_img.info:0 yamm_api/yamm_api.module:38 yamm_api/yamm_api.info:0 yamm_client/yamm_client.info:0 yamm_scheduler/yamm_scheduler.info:0 yamm_server/yamm_server.info:0
+msgid "Yamm"
+msgstr ""
+
+#: yamm_api/yamm_api.admin.inc:15
+msgid "DataSync is disabled, its options are not available"
+msgstr ""
+
+#: yamm_api/yamm_api.admin.inc:20
+msgid "Cleaning tasks (advanced users)"
+msgstr ""
+
+#: yamm_api/yamm_api.admin.inc:26
+msgid "Rebuild option will try to fix DataSync module configuration to make it work without any further configuration. Note that this might not work on all environments. Clean state option will clean up the current state, and delete all current running DataSync Yamm jobs"
+msgstr ""
+
+#: yamm_api/yamm_api.admin.inc:30
+msgid "Rebuild DataSync configuration"
+msgstr ""
+
+#: yamm_api/yamm_api.admin.inc:36
+msgid "Clean state"
+msgstr ""
+
+#: yamm_api/yamm_api.admin.inc:41
+msgid "Yammm global options"
+msgstr ""
+
+#: yamm_api/yamm_api.admin.inc:48
+msgid "Debug mode"
+msgstr ""
+
+#: yamm_api/yamm_api.admin.inc:49
+msgid "Check this and you will get A LOT of debug messages in watchdog entries"
+msgstr ""
+
+#: yamm_api/yamm_api.admin.inc:58
+msgid "Clean operation ran successfully"
+msgstr ""
+
+#: yamm_api/yamm_api.admin.inc:63
+msgid "DataSync configuration rebuilt"
+msgstr ""
+
+#: yamm_api/yamm_api.module:75
+msgid "Content type"
+msgstr ""
+
+#: yamm_api/yamm_api.module:78
+msgid "Node"
+msgstr ""
+
+#: yamm_api/yamm_api.module:82
+msgid "Taxonomy term"
+msgstr ""
+
+#: yamm_api/yamm_api.module:86
+msgid "Taxonomy vocabulary"
+msgstr ""
+
+#: yamm_api/yamm_api.module:89
+msgid "User"
+msgstr ""
+
+#: yamm_api/yamm_api.module:93
+msgid "Theme"
+msgstr ""
+
+#: yamm_api/yamm_api.module:107
+msgid "Simple hello"
+msgstr ""
+
+#: yamm_api/yamm_api.module:176
+msgid "Full content synchronisation job"
+msgstr ""
+
+#: yamm_api/yamm_api.module:186
+msgid "server waiting pull"
+msgstr ""
+
+#: yamm_api/yamm_api.module:189
+msgid "client canceled"
+msgstr ""
+
+#: yamm_api/yamm_api.module:192
+msgid "finished"
+msgstr ""
+
+#: yamm_api/yamm_api.module:195
+msgid "timeout"
+msgstr ""
+
+#: yamm_api/yamm_api.module:198
+msgid "server is down"
+msgstr ""
+
+#: yamm_api/yamm_api.module:201
+msgid "client says already running"
+msgstr ""
+
+#: yamm_api/yamm_api.module:204
+msgid "client says unknown method"
+msgstr ""
+
+#: yamm_api/yamm_api.module:207
+msgid "unknown"
+msgstr ""
+
+#: yamm_api/yamm_api.module:269
+msgid "yamm"
+msgstr ""
+
+#: yamm_api/yamm_api.module:269
+msgid "Unable to reach @url (xmlrpc error @errno : \"@errmsg\") while calling @method with @args"
+msgstr ""
+
+#: yamm_api/yamm_api.module:39
+msgid "Configure and manage synchronisation server"
+msgstr ""
+
+#: yamm_api/yamm_api.module:48
+msgid "Common options"
+msgstr ""
+
+#: yamm_api/yamm_api.module:49
+msgid "Edit Yamm API common options"
+msgstr ""
+
+#: (duplicate) yamm_api/yamm_api.install:22 
+msgid "Yamm help"
+msgstr ""
+
+#: (duplicate) yamm_api/yamm_api.install:23 
+msgid "Yamm documentation uses <i>Advanced help</i> module. You should consider installing it if you want to read the full documentation."
+msgstr ""
+
+#: (duplicate) yamm_api/yamm_api.install:29 ;36 
+msgid "Yamm UUID"
+msgstr ""
+
+#: (duplicate) yamm_api/yamm_api.install:30 
+msgid "Yamm API module uses the PECL::Package::UUID extention if present to generate correct V4 UUID, you should consider install it before server."
+msgstr ""
+
+#: (duplicate) yamm_api/yamm_api.install:37 
+msgid "PECL::Package::UUID extention installed. Yamm will generate correct V4 UUID."
+msgstr ""
+
+#: yamm_api/yamm_api.info:0
+msgid "Yamm API"
+msgstr ""
+
+#: yamm_api/yamm_api.info:0
+msgid "Yet Another Migration Module common API"
+msgstr ""
+
+#: yamm_api/entities/entity_content.inc:28
+msgid "Content type revisions"
+msgstr ""
+
+#: yamm_api/entities/entity_content.inc:29
+msgid "If you check this option, modified content types will be copied with a new name, time based. All node associated to old content type will be moved to the content type revision. Note that it will break your views which are content_type based, and could break some other modules behavior."
+msgstr ""
+
+#: yamm_api/entities/entity_content.inc:34
+msgid "Ignore content type"
+msgstr ""
+
+#: yamm_api/entities/entity_content.inc:36
+msgid "Try to enable module, ignore in case of fail"
+msgstr ""
+
+#: yamm_api/entities/entity_content.inc:38
+msgid "If module exists update content type, else try to enable module"
+msgstr ""
+
+#: yamm_api/entities/entity_content.inc:40
+msgid "Whatever happens, save the content type"
+msgstr ""
+
+#: yamm_api/entities/entity_content.inc:44
+msgid "Module content types behavior"
+msgstr ""
+
+#: yamm_api/entities/entity_content.inc:46
+msgid "Behavior to adopt when updating or inserting a module defined content type."
+msgstr ""
+
+#: yamm_api/entities/entity_content.inc:125;163
+msgid "entity_content"
+msgstr ""
+
+#: yamm_api/entities/entity_content.inc:125;163
+msgid "Error during content import @msg"
+msgstr ""
+
+#: yamm_api/entities/entity_term.inc:23
+msgid "Merge duplicates"
+msgstr ""
+
+#: yamm_api/entities/entity_term.inc:24
+msgid "This options will merge client side local terms with incoming server ones if they share the same exact name. Note that terms linked to a UUID will not be merged. There is caveat with this method, to be sure we can handle multiple merge, we use the newly created identifier as reference, which could break existing contrib using term identifiers behavior (i.e. views based on tid)."
+msgstr ""
+
+#: yamm_api/entities/entity_user.inc:27
+msgid "Ignore new user definition (leave original as-is)"
+msgstr ""
+
+#: yamm_api/entities/entity_user.inc:28
+msgid "Update all information"
+msgstr ""
+
+#: yamm_api/entities/entity_user.inc:29
+msgid "Update all information except password"
+msgstr ""
+
+#: yamm_api/entities/entity_user.inc:30
+msgid "Update password only"
+msgstr ""
+
+#: yamm_api/entities/entity_user.inc:34 yamm_api/entities/entity_vocabulary.inc:30
+msgid "Duplicates handling"
+msgstr ""
+
+#: yamm_api/entities/entity_user.inc:36
+msgid "Define what behavior the the entity should adopt when username conflicts with an already existing one."
+msgstr ""
+
+#: yamm_api/entities/entity_user.inc:41
+msgid "Admin override"
+msgstr ""
+
+#: yamm_api/entities/entity_user.inc:43
+msgid "Define what behavior the the entity should for site administrator."
+msgstr ""
+
+#: yamm_api/entities/entity_vocabulary.inc:25
+msgid "Create new vocabulary"
+msgstr ""
+
+#: yamm_api/entities/entity_vocabulary.inc:26
+msgid "Update existing"
+msgstr ""
+
+#: yamm_api/entities/entity_vocabulary.inc:32
+msgid "Define what behavior the the entity should adopt when vocabulary name conflicts with an existing one. Beware, if more than one duplicate is found, the algorithm won't merge but will create a new one instead."
+msgstr ""
+
+#: yamm_client/yamm_client.admin.inc:14 yamm_client/yamm_client.module:18
+msgid "Server"
+msgstr ""
+
+#: yamm_client/yamm_client.admin.inc:21
+msgid "URL"
+msgstr ""
+
+#: yamm_client/yamm_client.admin.inc:22
+msgid "URL must be the master website access URL. This is allow client to respond with XML/RPC calls to master Drupal instance."
+msgstr ""
+
+#: yamm_client/yamm_client.admin.inc:26
+msgid "Transactions"
+msgstr ""
+
+#: yamm_client/yamm_client.admin.inc:32
+msgid "Transaction life time"
+msgstr ""
+
+#: yamm_client/yamm_client.admin.inc:34
+msgid "None"
+msgstr ""
+
+#: yamm_client/yamm_client.admin.inc:35
+msgid "1 hour"
+msgstr ""
+
+#: yamm_client/yamm_client.admin.inc:36
+msgid "6 hours"
+msgstr ""
+
+#: yamm_client/yamm_client.admin.inc:37
+msgid "12 hours"
+msgstr ""
+
+#: yamm_client/yamm_client.admin.inc:38
+msgid "1 day"
+msgstr ""
+
+#: yamm_client/yamm_client.admin.inc:40
+msgid "At each cron run, transaction older than this will be set as 'timeouted' and corresponding DataSync jobs will be set as failed."
+msgstr ""
+
+#: yamm_client/yamm_sync.job.inc:34 yamm_client/yamm_client.module:136;139
+msgid "yamm_client"
+msgstr ""
+
+#: yamm_client/yamm_sync.job.inc:34
+msgid "You must configure server"
+msgstr ""
+
+#: yamm_client/yamm_client.module:37
+msgid "Authentication test"
+msgstr ""
+
+#: yamm_client/yamm_client.module:42
+msgid "Push command from server"
+msgstr ""
+
+#: yamm_client/yamm_client.module:52
+msgid "Yamm full data synchronisation"
+msgstr ""
+
+#: yamm_client/yamm_client.module:53 yamm_scheduler/yamm_scheduler.module:17
+msgid "Will fully synchronize this client from Yamm server site"
+msgstr ""
+
+#: yamm_client/yamm_client.module:136
+msgid "Authentification from XMLRPC call (user @user)"
+msgstr ""
+
+#: yamm_client/yamm_client.module:139
+msgid "Authentification from XMLRPC failed (user @user), error: @error"
+msgstr ""
+
+#: yamm_client/yamm_client.module:19
+msgid "Edit master detail from which this client should respond"
+msgstr ""
+
+#: yamm_client/yamm_client.info:0
+msgid "Yamm client"
+msgstr ""
+
+#: yamm_client/yamm_client.info:0
+msgid "Yet Another Migration Module client side code"
+msgstr ""
+
+#: yamm_scheduler/yamm_push.job.inc:49
+msgid "New transaction created for '@name', waiting for client to finish."
+msgstr ""
+
+#: yamm_scheduler/yamm_push.job.inc:52
+msgid "Client '@name' cancelled transaction"
+msgstr ""
+
+#: yamm_scheduler/yamm_push.job.inc:55
+msgid "Unknown status returned by client '@name'"
+msgstr ""
+
+#: yamm_scheduler/yamm_scheduler.module:16
+msgid "Yamm push order to all activated clients"
+msgstr ""
+
+#: yamm_scheduler/yamm_scheduler.info:0
+msgid "Yamm scheduler"
+msgstr ""
+
+#: yamm_scheduler/yamm_scheduler.info:0
+msgid "Yamm server scheduler based on DataSync job scheduling"
+msgstr ""
+
+#: yamm_server/yamm_server.admin.inc:33;53;459;487
+msgid "Operations"
+msgstr ""
+
+#: yamm_server/yamm_server.admin.inc:38
+msgid "Set selected as default"
+msgstr ""
+
+#: yamm_server/yamm_server.admin.inc:39;464
+msgid "Add new item"
+msgstr ""
+
+#: yamm_server/yamm_server.admin.inc:40
+msgid "Delete selected"
+msgstr ""
+
+#: yamm_server/yamm_server.admin.inc:44;206;471;601
+msgid "Update"
+msgstr ""
+
+#: yamm_server/yamm_server.admin.inc:50
+msgid "Default"
+msgstr ""
+
+#: yamm_server/yamm_server.admin.inc:51
+msgid "Profile"
+msgstr ""
+
+#: yamm_server/yamm_server.admin.inc:52;479
+msgid "Name"
+msgstr ""
+
+#: yamm_server/yamm_server.admin.inc:73 yamm_server/yamm_server.theme:82
+msgid "Edit"
+msgstr ""
+
+#: yamm_server/yamm_server.admin.inc:96
+msgid "Are you sure you want to delete these profiles?"
+msgstr ""
+
+#: yamm_server/yamm_server.admin.inc:97;384
+msgid "They will be definitely removed. You won't be able to restore them."
+msgstr ""
+
+#: yamm_server/yamm_server.admin.inc:122
+msgid "Selected profiles deleted"
+msgstr ""
+
+#: yamm_server/yamm_server.admin.inc:141
+msgid "Default profile updated."
+msgstr ""
+
+#: yamm_server/yamm_server.admin.inc:154;543
+msgid "Not implemented yet"
+msgstr ""
+
+#: yamm_server/yamm_server.admin.inc:179
+msgid "Profile name"
+msgstr ""
+
+#: yamm_server/yamm_server.admin.inc:185;568;577
+msgid "Internal name"
+msgstr ""
+
+#: yamm_server/yamm_server.admin.inc:188
+msgid "Must contains only alphanumeric caracters or _ and -"
+msgstr ""
+
+#: yamm_server/yamm_server.admin.inc:200
+msgid "Views that export content"
+msgstr ""
+
+#: yamm_server/yamm_server.admin.inc:202
+msgid "Type one view internal name per line"
+msgstr ""
+
+#: yamm_server/yamm_server.admin.inc:206;601
+msgid "Save"
+msgstr ""
+
+#: yamm_server/yamm_server.admin.inc:221
+msgid "You must set a name"
+msgstr ""
+
+#: yamm_server/yamm_server.admin.inc:240
+msgid "Views @views does not exist or are invalid"
+msgstr ""
+
+#: yamm_server/yamm_server.admin.inc:274
+msgid "Profile @profile updated"
+msgstr ""
+
+#: yamm_server/yamm_server.admin.inc:277
+msgid "Profile @profile created"
+msgstr ""
+
+#: yamm_server/yamm_server.admin.inc:324
+msgid "Submit"
+msgstr ""
+
+#: yamm_server/yamm_server.admin.inc:383
+msgid "Are you sure you want to delete these clients?"
+msgstr ""
+
+#: yamm_server/yamm_server.admin.inc:389
+msgid "Are you sure you want to suspend these clients?"
+msgstr ""
+
+#: yamm_server/yamm_server.admin.inc:390
+msgid "These clients won't be synchronized anymore. You will be able to activate them back whenever you want."
+msgstr ""
+
+#: yamm_server/yamm_server.admin.inc:395
+msgid "Are you sure you want to activate these clients?"
+msgstr ""
+
+#: yamm_server/yamm_server.admin.inc:396
+msgid "These clients will be synchronized. You will be able to suspend them whenever you want."
+msgstr ""
+
+#: yamm_server/yamm_server.admin.inc:465
+msgid "Remove selected"
+msgstr ""
+
+#: yamm_server/yamm_server.admin.inc:466
+msgid "Suspend selected"
+msgstr ""
+
+#: yamm_server/yamm_server.admin.inc:467
+msgid "Activate selected"
+msgstr ""
+
+#: yamm_server/yamm_server.admin.inc:480
+msgid "Url"
+msgstr ""
+
+#: yamm_server/yamm_server.admin.inc:483;590
+msgid "Username"
+msgstr ""
+
+#: yamm_server/yamm_server.admin.inc:486
+msgid "Status"
+msgstr ""
+
+#: yamm_server/yamm_server.admin.inc:578
+msgid "Only letters, numbers and _ or - are allowed."
+msgstr ""
+
+#: yamm_server/yamm_server.admin.inc:585
+msgid "Client base url"
+msgstr ""
+
+#: yamm_server/yamm_server.admin.inc:591
+msgid "Maintenance username for remote client. It must have the \"launch sync jobs\" permission."
+msgstr ""
+
+#: yamm_server/yamm_server.admin.inc:596
+msgid "Password"
+msgstr ""
+
+#: yamm_server/yamm_server.admin.inc:597
+msgid "You have to type here the remote user password. Leave empty if you do not want to modify it."
+msgstr ""
+
+#: yamm_server/yamm_server.admin.inc:608
+msgid "Invalid name"
+msgstr ""
+
+#: yamm_server/yamm_server.admin.inc:616
+msgid "Client does not exists"
+msgstr ""
+
+#: yamm_server/yamm_server.admin.inc:622
+msgid "Client name already taken"
+msgstr ""
+
+#: yamm_server/yamm_server.admin.inc:625
+msgid "You must set a password"
+msgstr ""
+
+#: yamm_server/yamm_server.admin.inc:630
+msgid "You must set credentials"
+msgstr ""
+
+#: yamm_server/yamm_server.admin.inc:666
+msgid "Communication OK"
+msgstr ""
+
+#: yamm_server/yamm_server.admin.inc:667
+msgid "Server is up"
+msgstr ""
+
+#: yamm_server/yamm_server.admin.inc:670
+msgid "Unable to reach client"
+msgstr ""
+
+#: yamm_server/yamm_server.admin.inc:671
+msgid "Server seems to be down"
+msgstr ""
+
+#: yamm_server/yamm_server.admin.inc:685
+msgid "@name overview"
+msgstr ""
+
+#: yamm_server/yamm_server.admin.inc:704
+msgid "Push method"
+msgstr ""
+
+#: yamm_server/yamm_server.admin.inc:716
+msgid "Push"
+msgstr ""
+
+#: yamm_server/yamm_server.admin.inc:733
+msgid "New transaction created, waiting for client to finish."
+msgstr ""
+
+#: yamm_server/yamm_server.admin.inc:736
+msgid "Client canceled transaction"
+msgstr ""
+
+#: yamm_server/yamm_server.admin.inc:739
+msgid "Unknown status returned by client (@id: @status)"
+msgstr ""
+
+#: yamm_server/yamm_server.admin.inc:743
+msgid "Client not responding"
+msgstr ""
+
+#: yamm_server/yamm_server.admin.inc:747
+msgid "Unknown method, push not send"
+msgstr ""
+
+#: yamm_server/yamm_server.pull.inc:39;97;117;138;148
+msgid "yamm_pull"
+msgstr ""
+
+#: yamm_server/yamm_server.pull.inc:39;117;138;148
+msgid "@e"
+msgstr ""
+
+#: yamm_server/yamm_server.pull.inc:97
+msgid "View @view exports @count objects"
+msgstr ""
+
+#: yamm_server/yamm_server.module:84
+msgid "Properties"
+msgstr ""
+
+#: yamm_server/yamm_server.module:157;162
+msgid "Client pulls"
+msgstr ""
+
+#: yamm_server/yamm_server.module:167
+msgid "Client pulls dependencies"
+msgstr ""
+
+#: yamm_server/yamm_server.module:180
+msgid "When an incoming pull order arrives, and transaction is accepted by server"
+msgstr ""
+
+#: yamm_server/yamm_server.module:182
+msgid "When an incoming pull order arrives, and transaction is erroneous"
+msgstr ""
+
+#: yamm_server/yamm_server.module:449;457;466;474;480
+msgid "yamm_server"
+msgstr ""
+
+#: yamm_server/yamm_server.module:449
+msgid "Unknown transaction incomming !tid"
+msgstr ""
+
+#: yamm_server/yamm_server.module:457
+msgid "Unknown client for transaction !tid"
+msgstr ""
+
+#: yamm_server/yamm_server.module:466
+msgid "Client @name is suspended and transaction !tid is not in manual mode, aborting"
+msgstr ""
+
+#: yamm_server/yamm_server.module:474
+msgid "Transaction !tid sent signal"
+msgstr ""
+
+#: yamm_server/yamm_server.module:480
+msgid "Transaction unknown error for !tid"
+msgstr ""
+
+#: yamm_server/yamm_server.module:23
+msgid "Clients list"
+msgstr ""
+
+#: yamm_server/yamm_server.module:24
+msgid "Manage, add, delete, change status of clients"
+msgstr ""
+
+#: yamm_server/yamm_server.module:31
+msgid "Client overview"
+msgstr ""
+
+#: yamm_server/yamm_server.module:39
+msgid "Add client"
+msgstr ""
+
+#: yamm_server/yamm_server.module:47
+msgid "Edit client"
+msgstr ""
+
+#: yamm_server/yamm_server.module:60
+msgid "Profiles overview"
+msgstr ""
+
+#: yamm_server/yamm_server.module:61
+msgid "Manage, add, delete profiles"
+msgstr ""
+
+#: yamm_server/yamm_server.module:68
+msgid "Create profile"
+msgstr ""
+
+#: yamm_server/yamm_server.module:76
+msgid "Edit profile"
+msgstr ""
+
+#: yamm_server/yamm_server.module:89
+msgid "Entities settings"
+msgstr ""
+
+#: yamm_server/yamm_server.module:103
+msgid "Check client up"
+msgstr ""
+
+#: yamm_server/yamm_server.theme:18
+msgid "Back to previous page"
+msgstr ""
+
+#: yamm_server/yamm_server.theme:57
+msgid "No clients available."
+msgstr ""
+
+#: yamm_server/yamm_server.theme:78
+msgid "Overview"
+msgstr ""
+
+#: yamm_server/yamm_server.theme:86
+msgid "Test"
+msgstr ""
+
+#: yamm_server/yamm_server.theme:116
+msgid "No Profile available."
+msgstr ""
+
+#: yamm_server/yamm_server.theme:137
+msgid "Activated"
+msgstr ""
+
+#: yamm_server/yamm_server.theme:140
+msgid "Suspended"
+msgstr ""
+
+#: yamm_server/yamm_server.theme:143
+msgid "Unknown"
+msgstr ""
+
+#: yamm_server/yamm_server.info:0
+msgid "Yamm server"
+msgstr ""
+
+#: yamm_server/yamm_server.info:0
+msgid "Yet Another Migration Module server and UI"
+msgstr ""
+

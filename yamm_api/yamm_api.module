@@ -1,0 +1,490 @@
+<?php
+// $Id: yamm_api.module,v 1.8 2010/05/12 16:20:39 pounard Exp $
+
+/**
+ * @file
+ * Yamm common API.
+ */
+
+/*
+ * Client <-> server transaction status constants
+ *
+ * The only success flag is WAITING or FINISHED in case of client response.
+ * All others are failures.
+ *
+ * They are also used as stored value for logging purposes.
+ */
+define('YAMM_TRANSACTION_STATUS_WAITING',  1); // Awaiting for client pull.
+define('YAMM_TRANSACTION_STATUS_CANCELED', 2); // Canceled by client.
+define('YAMM_TRANSACTION_STATUS_FINISHED', 3); // Finished.
+define('YAMM_TRANSACTION_STATUS_TIMEOUT',  4); // Timeout, canceled by server.
+define('YAMM_TRANSACTION_STATUS_HOSTDOWN', 5); // Server is down before pushing.
+define('YAMM_TRANSACTION_STATUS_RUNNING',  6); // Client is already running a transaction.
+define('YAMM_TRANSACTION_STATUS_UNKNOWN',  7); // Client does not known the method.
+define('YAMM_TRANSACTION_STATUS_DENIED',   8); // Server denied pull.
+define('YAMM_TRANSACTION_STATUS_OUTDATED', 9); // Client does not respond the right protocol.
+
+define('YAMM_METHOD_SYNC', 'yamm_method_sync');
+
+// Variable: debug mode (set to TRUE or FALSE)
+define('YAMM_OPT_DEBUG', 'yamm_opt_debug');
+
+/**
+ * Implementation of hook_menu().
+ */
+function yamm_api_menu() {
+  $items = array();
+
+  $items['admin/yamm'] = array(
+    'title' => 'Yamm',
+    'description' => "Configure and manage synchronisation server",
+    'position' => 'left',
+    'weight' => 20,
+    'page callback' => 'system_admin_menu_block_page',
+    'access arguments' => array('access administration pages'),
+    'file' => 'system.admin.inc',
+    'file path' => drupal_get_path('module', 'system'),
+  );
+  $items['admin/yamm/global'] = array(
+    'title' => 'Common options',
+    'description' => 'Edit Yamm API common options',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('yamm_api_settings'),
+    'access arguments' => array('administer site configuration'),
+    'file' => 'yamm_api.admin.inc',
+  );
+
+  return $items;
+}
+
+/**
+ * Implementation of hook_perms().
+ */
+function yamm_api_perms() {
+  return array(
+    'administer sync server',
+    'administer sync client',
+    'launch sync jobs');
+}
+
+/**
+ * Implementation of hook_yamm().
+ */
+function yamm_api_yamm() {
+  $path = drupal_get_path('module', 'yamm_api') . '/lib/Yamm/Entity';
+  return array(
+    'content' => array(
+      'name' => t('Content type'),
+      'file' => $path . '/Content.php',
+    ),
+    'node' => array(
+      'name' => t('Node'),
+      'file' => $path . '/Node.php',
+      'base_table' => 'node',
+      'update_field' => 'changed',
+    ),
+    'term' => array(
+      'name' => t('Taxonomy term'),
+      'file' => $path . '/Term.php',
+      'base_table' => 'term_data',
+    ),
+    'vocabulary' => array(
+      'name' => t('Taxonomy vocabulary'),
+  	  'file' => $path . '/Vocabulary.php',
+    ),
+    'user' => array(
+      'name' => t('User'),
+  	  'file' => $path . '/User.php',
+      'base_table' => 'users',
+    ),
+/*
+    'theme' => array(
+      'name' => t('Theme'),
+      'module' => 'yamm_api'),
+ */
+/*
+    'view' => array(
+      'name' => t('Views'),
+      'module' => 'yamm_api',
+      'base_table' => 'views_view'),
+ */
+  );
+}
+
+/**
+ * Implementation of hook_xmlrpc().
+ */
+function yamm_api_xmlrpc() {
+  return array(
+    array(
+      'yamm.hello',
+      'yamm_api_hello_cb',
+      array('boolean'),
+      t('Simple hello'))
+  );
+}
+
+/**
+ * Get all defined entities.
+ *
+ * @return array
+ */
+function yamm_api_get_entities() {
+  static $entities_definition;
+
+  if (empty($entities_definition)) {
+    $data = cache_get('entities', 'cache_yamm');
+    $entities_definition = $data->data;
+
+    // Build cache
+    if (empty($entities_definition)) {
+
+      // Check for conflicts
+      $base_tables = array();
+      $types = array();
+
+      $entities_definition = array();
+
+      foreach (module_implements('yamm') as $module) {
+        $result = module_invoke($module, 'yamm');
+
+        foreach ($result as $type => &$definition) {  
+          // Check for valid file
+          if (isset($definition['file'])) {
+            if (!preg_match('/\//', $definition['file'])) {
+              $definition['file'] = drupal_get_path('module', $module) . '/' . $definition['file'];
+            }
+            if (file_exists($definition['file'])) {
+              require_once $definition['file'];
+            }
+            else {
+              $msg = "Entity '@type' is defined by module '@module' in a non existant file";
+              $arg = array('@type' => $type, '@module' => $module);
+              watchdog('yamm_api', $msg, $arg, WATCHDOG_ALERT);
+            }
+          }
+
+          // If file is invalid, undefined, or does not exists, try the class
+          // existence anyway.
+          $className = Yamm_EntityFactory::getClassNameByType($type);
+          if (! class_exists($className)) {
+            $msg = "Entity '@type' is defined by module '@module' but associated '@class' class does not exists";
+            $arg = array('@type' => $type, '@module' => $module, '@class' => $className);
+            watchdog('yamm_api', $msg, $arg, WATCHDOG_ERROR);
+            continue;
+          }
+
+          // Check for base_table conflicts
+          if (isset($base_tables[$definition['base_table']])) {
+            $msg = "Entity '@type' defined by module '@module' conflicts, it uses an already defined base_table";
+            $arg = array('@type' => $type, '@module' => $module);
+            watchdog('yamm_api', $msg, $arg, WATCHDOG_ERROR);
+            continue;
+          }
+
+          $definition['module'] = $module;
+          $entities_definition[$type] = $definition;
+        }
+      }
+
+      cache_set('entities', $entities_definition, 'cache_yamm', CACHE_PERMANENT);
+    }
+  }
+
+  return $entities_definition;
+}
+
+/**
+ * Implementation of hook_flush_caches().
+ */
+function yamm_api_flush_caches() {
+  return array('cache_yamm');
+}
+
+/**
+ * Get hard-coded known client <-> server methods
+ * For push only purposes.
+ *
+ * All this methods should be client-implemented datasync jobs.
+ */
+function yamm_api_push_methods() {
+  return array(
+    'yamm_sync' => t("Full content synchronisation job"));
+}
+
+function yamm_api_push_method_exists($method) {
+  return array_key_exists($method, yamm_api_push_methods());
+}
+
+function yamm_api_get_status_localized_string($status) {
+  switch ($status) {
+    case YAMM_TRANSACTION_STATUS_WAITING:
+      return t("server waiting pull");
+      break;
+    case YAMM_TRANSACTION_STATUS_CANCELED:
+      return t("client canceled");
+      break;
+    case YAMM_TRANSACTION_STATUS_FINISHED:
+      return t("finished");
+      break;
+    case YAMM_TRANSACTION_STATUS_TIMEOUT:
+      return t("timeout");
+      break;
+    case YAMM_TRANSACTION_STATUS_HOSTDOWN:
+      return t("server is down");
+      break;
+    case YAMM_TRANSACTION_STATUS_RUNNING:
+      return t("client says already running");
+      break;
+    case YAMM_TRANSACTION_STATUS_UNKNOWN:
+      return t("client says unknown method");
+      break;
+    case YAMM_TRANSACTION_STATUS_OUTDATED:
+    	return t("client runs an outdated version");
+    default:
+      return t("unknown");
+  }
+}
+
+/**
+ * Clean given base url. Any trailing path after hostname will be kept, only
+ * last trailing slash will be omited.
+ * 
+ * @param string $url
+ *   Url in which to extract base url.
+ * @return string
+ *   Cleaned up url, without http://, and without trailing slash
+ */
+function yamm_api_clean_baseurl($url) {
+  preg_match('/^(http:\/\/|)(.*?)(\/+|)$/', $url, $matches);
+  return $matches[2];
+}
+
+/**
+ * Check that URL starts with http:// and finish with a trailing slash.
+ * If not, fix it.
+ * 
+ * @param string $url
+ * @return string
+ *   Well formated url
+ */
+function yamm_api_clean_url($url) {
+  $url = check_url($url);
+  if (! preg_match('/^http:\/\/.*$/', $url)) {
+    $url = 'http://' . $url;
+  }
+  if (! preg_match('/^.*\/$/', $url)) {
+    $url .= '/';
+  }
+  return $url;
+}
+
+/**
+ * Get clean url for xmlrpc calls
+ *
+ * @param string $url
+ * @return string
+ *   Well formated url
+ */
+function yamm_api_xmlrpc_clean_url($url) {
+  return yamm_api_clean_url($url) . 'xmlrpc.php';
+}
+
+/**
+ * Wrapper method for xmlrpc() to reformat url and handle error in our way.
+ *
+ * @param string $url
+ * @param string $method
+ * @param ...
+ *   Other parameters
+ * @return mixed
+ *   Array (xmlrpc results) in case of success
+ *   FALSE else
+ */
+function yamm_api_xmlrpc_call($url, $method) {
+  $args = func_get_args();
+
+  // Shift this method args
+  $url = array_shift($args);
+  $method = array_shift($args);
+
+  $url = yamm_api_xmlrpc_clean_url($url);
+
+  // Unshift parameters in the right order, starting with user/pass
+  array_unshift($args, $method);
+  array_unshift($args, $url);
+
+  $result = call_user_func_array('xmlrpc', $args);
+
+  if ($result === FALSE) {
+    if ($error = xmlrpc_error()) {
+      watchdog('yamm', 'Unable to reach @url (xmlrpc error @errno : "@errmsg") while calling @method with @args', array(
+        '@url' => $url, '@errno' => $error->code, '@errmsg' => $error->message, '@method' => $method, '@args' => print_r($args, TRUE)), WATCHDOG_ERROR);
+      return FALSE;
+    }
+  }
+
+  return array('data' => $result, 'status' => TRUE);
+}
+
+/**
+ * Internal wrapper to create uuid using php-uuid
+ */
+function _yamm_api_uuid_create() {
+  static $uuid_object = NULL;
+
+  $ret = '';
+
+  if (! is_resource($uuid_object)) {
+    uuid_create(&$uuid_object);
+  }
+
+  uuid_make($uuid_object, UUID_MAKE_V4);
+  uuid_export($uuid_object, UUID_FMT_STR, &$ret);
+
+  return trim($ret);
+}
+
+/**
+ * Generate a random uuid, time based
+ *
+ * @return string
+ */
+function yamm_api_uuid_create() {
+  static $ext = NULL;
+
+  if ($ext === NULL) {
+    $ext = (bool) function_exists('uuid_create');
+  }
+
+  if ($ext) {
+    return _yamm_api_uuid_create();
+  }
+  else {
+    return str_replace(".", "", (string) uniqid(rand(), TRUE));
+  }
+}
+
+/**
+ * We are never going to do updates on this table, save is only insert
+ *
+ * @param string $uuid
+ * @param string $type
+ * @param int|string $identifier
+ * @return boolean
+ *   TRUE in case of success, FALSE if already exists or conflicts
+ */
+function yamm_api_uuid_save($uuid, $type, $identifier) {
+  db_query("INSERT INTO {yamm_uuid} (uuid, type, identifier) VALUES ('%s', '%s', '%s')", array(
+    $uuid, $type, $identifier));
+  return (bool) db_error();
+}
+
+/**
+ * Delete a UUID entry.
+ *
+ * @param string $uuid
+ *   UUID to delete.
+ *
+ * @return void
+ */
+function yamm_api_uuid_delete($uuid) {
+  db_query("DELETE FROM {yamm_uuid} WHERE uuid = '%s'", array($uuid));
+}
+
+/**
+ * Load corresponding uuid line from database
+ * This method will be usefull for client at pull time
+ *
+ * @param string $uuid
+ * @return object
+ */
+function yamm_api_uuid_load($uuid) {
+  static $cache = array();
+
+  if (! $cache[$uuid]) {
+    $cache[$uuid] = db_fetch_object(db_query("SELECT * FROM {yamm_uuid} WHERE uuid = '%s' LIMIT 1", $uuid));
+  }
+
+  return $cache[$uuid];
+}
+
+/**
+ * Load corresponding uuid line from database
+ * This method will be usefull for client at pull time
+ *
+ * @param string $uuid
+ * @return object
+ */
+function yamm_api_uuid_get($type, $identifier) {
+  return db_result(db_query("SELECT uuid FROM {yamm_uuid} WHERE type = '%s' and identifier = '%s' LIMIT 1", $type, $identifier));
+}
+
+function yamm_api_bootstrap_entity() {
+  static $loaded = FALSE;
+  if (! $loaded) {
+    require_once dirname(__FILE__) . '/lib/Yamm/Entity.php';
+    require_once dirname(__FILE__) . '/lib/Yamm/EntityFetcherInterface.php';
+    require_once dirname(__FILE__) . '/lib/Yamm/EntityFetcherAbstract.php';
+    require_once dirname(__FILE__) . '/lib/Yamm/EntityParser.php';
+    // Include the default entity fetcher, because no other implementation
+    // exists right now.
+    require_once dirname(__FILE__) . '/lib/Yamm/Server.php';
+    require_once dirname(__FILE__) . '/lib/Yamm/FileFetcher.php';
+    require_once dirname(__FILE__) . '/lib/Yamm/Server.php';
+    require_once dirname(__FILE__) . '/lib/Yamm/TransactionHelper.php';
+    require_once dirname(__FILE__) . '/lib/Yamm/EntityFetcher/Xmlrpc.php';
+    $loaded = TRUE;
+  }
+}
+
+/**
+ * Simple hello implementation
+ */
+function yamm_api_hello_cb() {
+  return TRUE;
+}
+
+/**
+ * Invoke the yamm_api_clean_hook().
+ */
+function yamm_api_clean() {
+  module_invoke_all('yamm_api_clean');
+}
+
+/**
+ * Implementation of hook_yamm_api_clean().
+ * TODO maybe something here later.
+ */
+/*
+function yamm_api_yamm_api_clean() {
+  yamm_api_clean_datasync(array('type' => array('yamm_sync')));
+}
+*/
+
+/**
+ * Is the code running in debug mode?
+ */
+function yamm_api_debug_mode() {
+  return variable_get(YAMM_OPT_DEBUG, FALSE);
+}
+
+/**
+ * Log a debug message
+ * 
+ * @param string $message
+ *   Message to send to debug 
+ */
+function yamm_api_debug($message, $variables = array()) {
+  global $debug;
+
+  // If daemoncli is in debug mode, output into console.
+  if ($debug) {
+    $t = get_t();
+    print($t($message, $variables) . "\n");
+  }
+
+  if (yamm_api_debug_mode()) {
+    watchdog('yamm', $message, $variables, WATCHDOG_DEBUG);
+  }
+}

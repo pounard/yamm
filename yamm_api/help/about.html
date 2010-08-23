@@ -1,0 +1,32 @@
+<!-- $Id: about.html,v 1.3 2009/11/05 20:19:36 pounard Exp $ -->
+
+<p><b>Yamm</b> is a tool suite that allow you to do massive and scheduled
+data migration between Drupal sites.</p>
+
+<p>It provides three packages, a client called <i>yamm_client</i>, a server
+called <i>yamm_server</i> and a common API package which is <i>yamm_api</i>.</p>
+
+<h3>Features</h3>
+
+<p>You can handle a list of <i>clients</i>, each client is a remote Drupal
+instance you want to synchronize. You associate them with <i>profiles</i>. Each
+profile is a container for a <i>view</i> list.<br/>
+The core synchronization is based on these views, each object referenced by
+those will be synchronized, it's up to you to build the right views.</p>
+
+<p>The synchronisation core algorithme uses a fully OO (<i>Object Oriented</i>)
+code. Which provide strong error handling using <i>exceptions</i> and a total
+abstraction for entities to synchronize.</p>
+
+<p>This synchronization framework is able to construct large dependency tree
+between objects, and will allow the clients to automatically fetch the needed
+dependencies, even if you did not referenced them in views.</p>
+
+<p>Right now, the core handle a short list of different entites, which are:</p>
+<ul>
+  <li>Nodes</li>
+  <li>Content type (as a node dependency)</li>
+  <li>Taxonomy terms</li>
+  <li>Taxonomy vocabularies (as a term dependency)</li>
+  <li>Users</li>
+</ul>

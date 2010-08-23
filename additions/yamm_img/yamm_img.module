@@ -1,0 +1,168 @@
+<?php
+// $Id: yamm_img.module,v 1.2 2009/12/02 17:32:13 pounard Exp $
+
+/**
+ * @file
+ * Yamm IMG yamm hooks implementation.
+ */
+
+/**
+ * Implementation of hook_yamm_entity_alter().
+ */
+function yamm_img_yamm_entity_alter($op, $type, $identifier, $object, $data = NULL) {
+  if ($type == 'node') {
+    switch ($op) {
+      case 'post_construct':
+        return array('file_downloads' => variable_get('file_downloads', FILE_DOWNLOADS_PUBLIC));
+        break;
+  
+      case 'post_update':
+      case 'post_save':
+        // TODO maybe later, or with D7, use another transfert mode than http
+        switch ($data['file_downloads']) {
+          case FILE_DOWNLOADS_PRIVATE:
+            // This could be a configuration error, we have to warn site admin
+            // even if YAMM debug mode is off
+            watchdog('yamm_img', "Server advertised that download method is private, canceled image fetching", array(), WATCHDOG_ERROR);
+            yamm_api_debug("Server advertised that download method is private, canceled image fetching", array(), WATCHDOG_ERROR);
+            break;
+
+          case NULL:
+            // See comment upper (configuration error)
+            watchdog('yamm_img', "Yamm IMG module seems deactivated on server, trying anyway", array(), WATCHDOG_ERROR);
+            yamm_api_debug("Yamm IMG module seems deactivated on server, trying anyway", array(), WATCHDOG_ERROR);
+          case FILE_DOWNLOADS_PUBLIC:
+            _yamm_img_node_alter_node($object);
+            break;
+        }
+        break;
+    }
+  }
+}
+
+function _yamm_img_node_alter_node(&$node) {
+  $files_path = file_create_path() . '/yamm_img';
+
+  if (! file_exists($files_path)) {
+    mkdir($files_path);
+  }
+
+  $modified = FALSE;
+
+  // Try to alter body
+  if (! empty($node->body)) {
+    $modified = _yamm_img_node_alter_images($node->body, $files_path) or $modified;
+  }
+
+  // Try to alter all text fields
+  $attributes = array();
+  foreach ($node as $attr => $value) {
+    if (substr($attr, 0, 6) == 'field_' && isset($node->{$attr}[0]['format'])) {
+      foreach ($node->{$attr} as &$text_field_data) {
+        $modified = _yamm_img_node_alter_images($text_field_data['value'], $files_path) or $modified;
+      }
+    }
+  }
+
+  if ($modified) {
+    node_save($node);
+    yamm_api_debug("Node @nid saved", array('@nid' => $node->nid));
+  }
+  else {
+    yamm_api_debug('Node @nid remains unmodified', array('@nid' => $node->nid));
+  }
+}
+
+/**
+ * Alter a buffer.
+ * 
+ * @param string &$buffer
+ *   Reference to original buffer to modify
+ * @param string $dest
+ *   Destination location
+ * @return boolean
+ *   TRUE if buffer is modified, FALSE else
+ */
+function _yamm_img_node_alter_images(&$buffer, $dest) {
+  // Magic REGEX !
+  preg_match_all('/<img.*?src="(.+?)".*?>/', $buffer, $matches);
+
+  foreach ($matches[1] as $source) {
+    // Exclude absolute URL
+    if (! preg_match('/^http:\/\/.*/', $source)) {
+
+      // Remove slashes
+      $source_path = $source;
+      while (substr($source_path, 0, 1) == '/') {
+        $source_path = substr($source_path, 1);
+      }
+
+      // Construct correct URL
+      $source_url = yamm_api_clean_url(yamm_client_server_url()) . $source_path;
+
+      $file = new stdClass();
+      $file->uid = isset($object->uid) ? $object->uid : 0;
+      $file->filename = basename($source_path);
+      $file->filepath = $dest . '/' . $file->filename;
+
+      if ($data = file_get_contents($source_url, FILE_BINARY)) {
+
+        // Check file exists
+        $fid = db_result(db_query("SELECT fid FROM {files} WHERE filepath = '%s'", array($file->filepath)));
+
+        if ($fid) {
+          // TODO check size with http
+          if (FALSE /* Size differs */) {
+            // File size differs, fetch the new one and overwrite it
+            yamm_api_debug("File '@source' differs with existing one, old file will be overwritten", array('@source' => $source_url));
+          }
+          else if (FALSE /* Size equals, should be just 'else { }' */) {
+            // File is (probably) the same, just skip fetching and return that
+            // buffer is modified
+            $buffer = str_replace($source, '/' . $file->filepath, $buffer);
+            yamm_api_debug("File '@source' already exists and have the same size, skipping", array('@source' => $absolute_path));
+            return TRUE;
+          }
+        }
+
+        // Get the real file destination
+        $absolute_path = realpath(dirname($file->filepath)) .'/'. $file->filename;
+
+        if ($size = file_put_contents($absolute_path, $data)) {
+          $file->filemime = file_get_mimetype($file->filename);
+          $file->filesize = $size;
+          $file->status = FILE_STATUS_PERMANENT;
+          $file->timestamp = time();
+  
+          // Write new file record
+          if ($fid) {
+            $file->fid = $fid;
+            drupal_write_record('files', $file, array('fid'));
+            yamm_api_debug("File '@source' updated", array('@source' => $file->filepath));
+          }
+          else {
+            drupal_write_record('files', $file);
+            yamm_api_debug("File '@source' saved", array('@source' => $file->filepath));
+          }
+
+          // Update node body
+          $buffer = str_replace($source, '/' . $file->filepath, $buffer);
+          return TRUE;
+        }
+        else {
+          // This an internal error, site admin should be aware of, even if YAMM
+          // debug mode is off
+          watchdog('yamm_img', "Could not save image '@source'", array('@source' => $file->filename), WATCHDOG_ERROR);
+          yamm_api_debug("Could not save image '@source'", array('@source' => $absolute_path));
+        }
+      }
+      else {
+        // See comment upper (internal error)
+        watchdog('yamm_img', "Could not get image '@source' from server", array('@source' => $source_url), WATCHDOG_ERROR);
+        yamm_api_debug("Could not get image '@source' from server", array('@source' => $source_url));
+      }
+    }
+  }
+
+  return FALSE;
+}

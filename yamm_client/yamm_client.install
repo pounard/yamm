@@ -1,0 +1,101 @@
+<?php
+// $Id: yamm_client.install,v 1.5 2010/05/12 16:20:39 pounard Exp $
+
+/**
+ * @file
+ * Yamm client schema definition
+ */
+
+/**
+ * Implementation of hook_install().
+ */
+function yamm_client_install() {
+  drupal_install_schema('yamm_client');
+
+  // Build datasync configuration
+  module_load_include('module', 'yamm_api', 'yamm_api');
+  yamm_api_rebuild_datasync(array('yamm_sync'));
+}
+
+/**
+ * Implementation of hook_uninstall().
+ */
+function yamm_client_uninstall() {
+  drupal_uninstall_schema('yamm_client');
+}
+
+/**
+ * Implementation of hook_schema().
+ */
+function yamm_client_schema() {
+  $schema = array();
+
+  $schema['yamm_client_transaction'] = array(
+    'fields' => array(
+      'tid' => array(
+        'type' => 'varchar',
+        'length' => '32',
+        'not null' => TRUE,
+        'description' => 'Transaction unique id'
+      ),
+      'status' => array(
+        'type' => 'int',
+        'size' => 'tiny',
+        'not null' => TRUE,
+        'description' => 'Last known status',
+        'default' => 1
+      ),
+      'created' => array(
+        'description' => 'The Unix timestamp when the information was created',
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+      'updated' => array(
+        'description' => 'The Unix timestamp when the information was last fetched',
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+      'server_url' => array(
+        'type' => 'varchar',
+        'length' => '255',
+        'not null' => TRUE,
+        'description' => 'Server that pushed the transaction url'
+      ),
+    ),
+    'primary key' => array('tid'),
+    'indexes' => array(
+      'yamm_transaction_updated_idx' => array('updated')
+    ),
+  );
+
+  return $schema;
+}
+
+/**
+ * Adds the server url field to database.
+ */
+function yamm_client_update_6001() {
+  $ret = array();
+  variable_set('yamm_client_allowed_servers', variable_get('yamm_client_server_url', ''));
+  variable_del('yamm_client_server_url');
+  db_add_field($ret, 'yamm_client_transaction', 'server_url', array(
+    'type' => 'varchar',
+    'length' => '255',
+    'not null' => TRUE,
+    'description' => 'Server that pushed the transaction url'
+  ));
+  return $ret;
+}
+
+function yamm_client_update_6002() {
+  $ret = array();
+  db_add_field($ret, 'yamm_client_transaction', 'created', array(
+    'description' => 'The Unix timestamp when the information was created',
+    'type' => 'int',
+    'not null' => TRUE,
+    'default' => 0,
+  ));
+  return $ret;
+}

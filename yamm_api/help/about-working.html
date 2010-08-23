@@ -1,0 +1,42 @@
+<!-- $Id: about-working.html,v 1.4 2010/03/24 00:45:43 pounard Exp $ -->
+
+<h3>Push/pull mechanism and dependency fetching</h3>
+
+<p>Yamm is network oriented. Objects fetching is base on a <b>push/pull</b>
+mechanism. This push/pull mechanism relies on a custom <b>DataSync module</b>
+job.</p>
+
+<p>Server <b>pushes</b> the synchronization order to the client, client responds
+OK if it is ready. Then, it creates the DataSync job. DataSync is scheduled
+using the Drupal <i>hook_cron()</i>, and will launch a <i>PHP CLI thread</i> on
+system which will launch the custom job.</p>
+
+<p>The job when created will <b>pull</b> the server the main data to synchronize
+(the objects referenced by your custom views) N times, until all objects have
+been sent. During pulling, server will create an <b>Entity</b> abstraction object
+for each piece of data, serialize it, and send it to the client.</p>
+
+<p>Until the network pulling stays unfinished, the client, with the help of the
+<i>EntityParser</i> which will iterate over all entities, and will create a
+dependency tree recursively, pulling the server again for each new sub tree it
+finds.
+<br/>
+During this parsing operation, the Yamm_EntityParser will also check for circular
+dependencies, and will not allow the same object to be saved or updated twice.
+</p>
+
+<center>
+<img src="path:images/thread_life.png" alt="Push/Pull sequence schema"/>
+</center>
+
+<h3>Incremental updates</h3>
+
+<p>During the process, the main data which allow Drupal sites to synchronize is
+passed through the Yamm_Entity object, it's a standard <b>V4 UUID</b>. Each Drupal
+supported object will have its own generated UUID on server, whatever its type
+is. These UUID, server generated are stored into the Yamm_Entity object, and will
+help the client to know, for each object it processes, if he has to create a new
+one, or update an existing one.</p>
+
+<p>Both client and server store their own UUID registry. The server stores the
+UUID it generates, the client stores the UUID the server gave him.</p>

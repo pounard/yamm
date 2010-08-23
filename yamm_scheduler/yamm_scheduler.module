@@ -1,0 +1,28 @@
+<?php
+// $Id: yamm_scheduler.module,v 1.3 2009/11/05 20:19:36 pounard Exp $
+
+/**
+ * @file
+ * Interface between yamm_server and DataSync to allow scheduling through
+ * DataSync module's scheduler.
+ */
+
+/**
+ * Implementation of hook_datasync_job_types().
+ */
+function yamm_scheduler_datasync_job_types() {
+  return array(
+    'yamm_push' => array(
+      'human_name' => t('Yamm push order to all activated clients'),
+      'description' => t('Will fully synchronize this client from Yamm server site'),
+      'parent' => 'datasync_job',
+    ),
+  );
+}
+
+/**
+ * Implementation of hook_yamm_api_clean().
+ */
+function yamm_scheduler_yamm_api_clean() {
+  yamm_api_clean_datasync(array('type' => array('yamm_push')));
+}

@@ -1,0 +1,85 @@
+<!-- $Id: api-coding.html,v 1.3 2009/11/05 20:19:36 pounard Exp $ -->
+
+<p>There is some caveat about Drupal coding conventions, here's an exhaustive
+list of coding convention we bypass:</p>
+
+<dt>String concatenation</dt>
+<dd>
+  The fact is Drupal 6 coding convention asks for:
+  <pre>$str = 'static'. $dynamic .'static'</pre>
+  We always do string concatenation like this:
+  <pre>$str = 'static' . $dynamic . 'static'</pre>
+  Which is the way of Drupal 7.
+</dd>
+
+<dt>CamelCase in classes</dt>
+<dd>
+  Drupal would do:
+  <pre>
+    class some_class {
+      public function hello_world() { }
+      // See here name collision
+      protected function _hello_world() { }
+      private function _hello_world() { }
+    }</pre>
+  Zend would do:
+  <pre>
+    class SomeClass {
+      public function helloWorld() { }
+      // Name collision avoided
+      protected function _helloWorld() { }
+      private function __helloWorld() { }
+    }</pre>
+  Which is we always do. Only for real OOP code. We still keep the 2 spaces
+  indent size.
+</dd>
+
+<dt>PHPdoc</dt>
+<dd>
+  Drupal tells you to do:
+  <pre>
+    /**
+     * My function does this, and it's pretty cool!
+     *
+     * @param $lolz
+     *   Mixed array of stuff that makes my lol catz!
+     * @param $catz
+     *   The catz cited above
+     * @param $killall = FALSE
+     *   (optional) Should I kill the kitten
+     * @return
+     *   Some value you probably already hate
+     */</pre>
+  Zend would tell you to do:
+  <pre>
+    /**
+     * My function does this, and it's pretty cool!
+     *
+     * @param array $lolz
+     *   Mixed array of stuff that makes my lol catz!
+     * @param LolCatz $catz
+     *   The catz cited above
+     * @param boolean $killall = FALSE
+     *   (optional) Should I kill the kitten
+     * @return SomeType
+     *   Some value you probably already hate
+     */</pre>
+  Which is somewhere more likely because some IDEs will use this information
+  to do better code completion and code folding.
+  <br/>
+  This won't hurt your Doxygen.
+</dd>
+
+<dt>LIMIT in SQL queries</dt>
+<dd>
+  You will see a lot of
+  <pre>SELECT 1 FROM {some_table} WHERE [some conditions] LIMIT 1</pre>
+  Drupal would tell you to use <i>db_query_range()</i>, but in our case, there
+  is no need for this. The <i>SELECT 1</i> (or often <i>TRUE</i> is a way to
+  determine if an object exists in database. The <i>LIMIT 1</i> is a a
+  performance fix to ensure our DBMS won't fetch useless results.
+</dd>
+
+<p>You don't like it, this is none of our business. Those standards are here for
+proper code readability. Zend coding standards are only used for PHPdoc (full
+module wide), and OOP parts.</p>

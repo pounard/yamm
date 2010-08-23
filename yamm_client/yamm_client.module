@@ -1,0 +1,304 @@
+<?php
+// $Id: yamm_client.module,v 1.6 2010/05/12 16:20:39 pounard Exp $
+
+/**
+ * @file
+ * Yamm client hooks and client/server dialog implementation.
+ */
+
+define('YAMM_CLIENT_ALLOWED_SERVERS', 'yamm_client_allowed_servers');
+define('YAMM_CLIENT_TRANSACTION_LIFETIME', 'yamm_client_transaction_lifetime');
+
+/**
+ * Implementation of hook_menu().
+ */
+function yamm_client_menu() {
+  $items = array();
+  $items['admin/yamm/server'] = array(
+    'title' => 'Server',
+    'description' => 'Edit master detail from which this client should respond',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('yamm_client_settings'),
+    'access arguments' => array('administer sync client'),
+    'file' => 'yamm_client.admin.inc',
+  );
+  return $items;
+}
+
+/**
+ * Implementation of hook_xmlrpc().
+ */
+function yamm_client_xmlrpc() {
+  return array(
+    array(
+      'yamm.client.authtest',
+      'yamm_client_authtest_cb',
+      array('boolean', 'string', 'string'),
+      t('Authentication test'),
+    ),
+    array(
+      'yamm.push',
+      'yamm_client_push_cb',
+      array('struct', 'string', 'string', 'string', 'string', 'string'),
+      t('Push command from server'),
+    )
+  );
+}
+
+/**
+ * Cron helper that will purge all given transactions. This will also purge all
+ * timeouted jobs within the same period.
+ * 
+ * @param int $tick
+ *   This is the timestamp from which you want to remove all transactions prior
+ *   to. If you give 0, all transactions will be purged.
+ */
+function _yamm_client_cron_helper_purge_transaction($tick = 0) {
+  // Clean timeouted transactions
+  if (! $tick) {
+    $tick = time() + 10; // Ugly but adding 10 seconds is not a bad idea.
+  }
+
+  db_query("DELETE FROM {yamm_client_transaction} WHERE updated < %d", array($tick));
+
+  // Clean timeouted jobs
+  $jobs = array();
+  $result = db_query("SELECT job_id FROM {datasync_jobs} WHERE type = '%s' AND phase <> '%s' AND completed = 0 AND started < %d", array('yamm_sync', 'datasync_added', $tick));
+  while ($data = db_fetch_object($result)) {
+    $jobs[] = $data->job_id;
+  }
+  if (! empty($jobs)) {
+    yamm_api_clean_datasync(array('job_id' => $jobs));
+  }
+}
+
+/**
+ * Implementation of hook_cron().
+ */
+function yamm_client_cron() {
+  if ($interval = variable_get(YAMM_CLIENT_TRANSACTION_LIFETIME, 0)) {
+    $tick = time() - (int) $interval;
+    _yamm_client_cron_helper_purge_transaction($tick);
+  }
+}
+
+/**
+ * Implementation of hook_daemoncli_run().
+ */
+function yamm_client_daemoncli_run() {
+  if ($tid = yamm_client_transaction_waiting()) {
+    yamm_api_bootstrap_entity();
+    // FIXME: This is where the procedural stored data becomes real OOP code.
+    $row = yamm_client_transaction_load($tid);
+    $transaction = new Yamm_TransactionHelper($tid, new Yamm_Server($row->server_url, "Foo server"));
+    $transaction->run();
+    return TRUE;
+  }
+  return FALSE;
+}
+
+/**
+ * Implementation of hook_yamm_api_clean().
+ */
+function yamm_client_yamm_api_clean() {
+  _yamm_client_cron_helper_purge_transaction();
+}
+
+/**
+ * Check credential passed through xmlrpc
+ *
+ * @param string $user
+ * @param string $pass
+ * @return boolean
+ *   TRUE in case of success
+ */
+function yamm_client_user_check($user, $hash) {
+  $success = FALSE;
+  $uid = db_result(db_query("SELECT uid FROM {users} WHERE name = '%s' AND pass = '%s' AND status = 1", array($user, $hash)));
+
+  $error = '';
+
+  if ($uid && ($account = user_load(array('uid' => $uid)))) {
+    if (! drupal_is_denied('mail', $account->mail)) {
+      if (user_access('launch sync jobs', $account)) {
+        $success = TRUE;
+      }
+      else {
+        $error = 'Permission denied';
+      }
+    }
+    else {
+      $error = 'Access is denied for account';
+    }
+  }
+  else {
+    $error = 'Wrong credentials';
+  }
+
+  if ($success) {
+    watchdog('yamm_client', 'Authentification from XMLRPC call (user @user)', array('@user' => $user), WATCHDOG_NOTICE);
+  }
+  else {
+    watchdog('yamm_client', 'Authentification from XMLRPC failed (user @user), error: @error', array('@user' => $user, '@error' => $error), WATCHDOG_WARNING);
+  }
+
+  return $success;
+}
+
+/**
+ * Add a transaction, in running status
+ *
+ * @param string $tid
+ * @return void
+ */
+function yamm_client_transaction_create($tid, $server_url) {
+  $time = time();
+  db_query("INSERT INTO {yamm_client_transaction} (tid, status, updated, server_url) VALUES ('%s', %d, %d, '%s')", array(
+    $tid, YAMM_TRANSACTION_STATUS_WAITING, $time, $server_url));
+}
+
+/**
+ * Load transaction data
+ *
+ * This method is used only in Drush integration.
+ *
+ * @param string $tid
+ * @return void
+ */
+function yamm_client_transaction_load($tid) {
+  return db_fetch_object(db_query("SELECT * FROM {yamm_client_transaction} WHERE tid = '%s'", $tid));
+}
+
+/**
+ * Update transaction status
+ *
+ * @param string $tid
+ * @param int $status
+ *   New status
+ * @return void
+ */
+function yamm_client_transaction_update_status($tid, $status) {
+  db_query("UPDATE {yamm_client_transaction} SET status = %d WHERE tid = '%s'", $status, $tid);
+}
+
+/**
+ * Tells if some transaction is already running.
+ *
+ * @return boolean
+ *   TRUE if no transaction running
+ */
+function yamm_client_transaction_free() {
+  return ! (bool) db_result(db_query("SELECT 1 FROM {yamm_client_transaction} WHERE status = %d LIMIT 1", YAMM_TRANSACTION_STATUS_RUNNING));
+}
+
+/**
+ * Tells if a transaction is waiting.
+ * 
+ * @return int
+ *   Transaction id. NULL else.
+ */
+function yamm_client_transaction_waiting() {
+  return db_result(db_query("SELECT tid FROM {yamm_client_transaction} WHERE status = %d LIMIT 1", YAMM_TRANSACTION_STATUS_WAITING));
+}
+
+/**
+ * Tells if some transaction is already running.
+ *
+ * @return string
+ *   Transaction id if one is running, NULL else
+ */
+function yamm_client_transaction_get_running() {
+  return db_result(db_query("SELECT tid FROM {yamm_client_transaction} WHERE status = %d ORDER BY updated DESC LIMIT 1", YAMM_TRANSACTION_STATUS_RUNNING));
+}
+
+/**
+ * Auth test implementation
+ */
+function yamm_client_authtest_cb($user, $pass) {
+  if (! yamm_client_user_check($user, $pass)) {
+    return FALSE;
+  }
+  return TRUE;
+}
+
+/**
+ * Push implementation.
+ */
+function yamm_client_push_cb($user, $pass, $server_url, $tid, $method) {
+  // Prepare the build info array.
+  $ret = array();
+
+  // Do some cleanup.
+  $server_url = yamm_api_clean_baseurl($server_url);
+
+  // Check server user/password.
+  if (! yamm_client_user_check($user, $pass)) {
+    return FALSE;
+  }
+  // Check that server is allowed.
+  if (!in_array($server_url, yamm_client_servers())) {
+    watchdog('yamm_client', "Unknown server tried to authenticate, server url is " . $server_url, NULL);
+    return FALSE;
+  }
+
+  // Check we have a transaction id
+  if (! empty($tid)) {
+    // Check we don't have a transaction already running
+    if (yamm_client_transaction_free()) {
+      // Here we start our real work
+      if (yamm_client_route_method($method)) {
+        yamm_client_transaction_create($tid, $server_url);
+        // Last update parameter will allow the server to filter content
+        // that has been modified only since the given timestamp.
+        $ret['last_update'] = db_result(db_query("SELECT created FROM {yamm_transaction} WHERE server_url = '%s'", $server_url));
+        $ret['status'] = YAMM_TRANSACTION_STATUS_WAITING;
+      }
+      else {
+        $ret['status'] = YAMM_TRANSACTION_STATUS_UNKNOWN;
+      }
+    }
+    else {
+      $ret['status'] = YAMM_TRANSACTION_STATUS_RUNNING;
+    }
+  }
+  else {
+    $ret['status'] = YAMM_TRANSACTION_STATUS_CANCELED;
+  }
+
+  return $ret;
+}
+
+/**
+ * Run a batched operation using datasync module.
+ * This is the main server push router.
+ *
+ * Returns TRUE if the client knows the method, NOT IN CASE OF SUCCESS.
+ * Returns FALSE if the client does not know the method, NOT IN CASE OF FAILURE.
+ *
+ * @return boolean
+ */
+function yamm_client_route_method($method) {
+  if (yamm_api_push_method_exists($method)) {
+    // datasync_job_add($method, NULL);
+    return TRUE;
+  }
+  else {
+    return FALSE;
+  }
+}
+
+/**
+ * Get server url
+ *
+ * @return string
+ *   Or NULL if not set
+ */
+function yamm_client_servers() {
+  $ret = preg_split('/[\s\n\r]+/', variable_get(YAMM_CLIENT_ALLOWED_SERVERS, ''));
+  foreach($ret as $key => $server_url) {
+    if ($ret) {
+      $ret[$key] = yamm_api_clean_baseurl($server_url);
+    }
+  }
+  return $ret;
+}

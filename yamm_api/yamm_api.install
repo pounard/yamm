@@ -1,0 +1,168 @@
+<?php
+// $Id: yamm_api.install,v 1.4 2010/03/25 23:53:11 pounard Exp $
+
+/**
+ * @file
+ * Yamm API schema definition
+ */
+
+/**
+ * Implementation of hook_requirements().
+ */
+function yamm_api_requirements($phase) {
+  $requirements = array();
+
+  // Ensure translations don't break at install time
+  $t = get_t();
+
+  if ($phase == 'runtime') {
+    // Check for advanced help
+    if (! module_exists('advanced_help')) {
+      $requirements['yamm_api_help'] = array(
+        'title' => $t('Yamm help'),
+        'value' => $t('Yamm documentation uses <i>Advanced help</i> module. You should consider installing it if you want to read the full documentation.'),
+        'severity' => REQUIREMENT_INFO
+      );
+    }
+    if (! function_exists('uuid_create')) {
+      $requirements['yamm_api_uuid'] = array(
+        'title' => $t('Yamm UUID'),
+        'value' => $t('Yamm API module uses the PECL::Package::UUID extention if present to generate correct V4 UUID, you should consider install it before server.'),
+        'severity' => REQUIREMENT_WARNING
+      );
+    }
+    else {
+      $requirements['yamm_api_uuid'] = array(
+        'title' => $t('Yamm UUID'),
+        'value' => $t('PECL::Package::UUID extention installed. Yamm will generate correct V4 UUID.'),
+        'severity' => REQUIREMENT_OK
+      );
+    }
+  }
+
+  return $requirements;
+}
+
+/**
+ * Implementation of hook_install().
+ */
+function yamm_api_install() {
+  drupal_install_schema('yamm_api');
+
+  // Performance fix for core
+  db_add_index($ret, 'term_data', 'term_name_idx', array('name'));
+}
+
+/**
+ * Implementation of hook_uninstall().
+ */
+function yamm_api_uninstall() {
+  drupal_uninstall_schema('yamm_api');
+}
+
+/**
+ * Implementation of hook_schema().
+ */
+function yamm_api_schema() {
+  $schema = array();
+
+  $schema['yamm_uuid'] = array(
+    'fields' => array(
+      'uuid' => array(
+        'type' => 'varchar',
+        'length' => '36',
+        'not null' => TRUE,
+        'description' => 'Object unique id, master generated, client copied',
+      ),
+      'type' => array(
+        'type' => 'varchar',
+        'length' => '32',
+        'not null' => TRUE,
+        'description' => 'Object type, could be term or node, or anything else',
+      ),
+      'identifier' => array(
+        'description' => 'Internal identifier for object',
+        'type' => 'varchar',
+        'length' => '128',
+        'not null' => TRUE,
+      ),
+      'updated' => array(
+        'description' => 'The Unix timestamp when entity was last updated.',
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+    ),
+    'primary key' => array('uuid'),
+    'indexes' => array(
+      'yamm_uuid_type_idx' => array('type'),
+      'yamm_uuid_identifier_idx' => array('identifier'),
+      'yamm_uuid_updated_idx' => array('updated'),
+    ),
+    'unique keys' => array(
+      'yamm_uuid_unique_type_identifier' => array('type', 'identifier')
+    )
+  );
+
+  // This table will contain a lot of stuff which won't expire
+  $schema['yamm_data_store'] = drupal_get_schema_unprocessed('system', 'cache');
+
+  $schema['cache_yamm'] = drupal_get_schema_unprocessed('system', 'cache');
+
+  return $schema;
+}
+
+function yamm_api_update_6001() {
+  $ret = array();
+
+  db_create_table($ret, 'yamm_variable', drupal_get_schema_unprocessed('yamm_api', 'yamm_variable'));
+
+  db_add_field($ret, 'yamm_uuid', 'identifier', array(
+    'description' => 'Internal identifier for object',
+    'type' => 'varchar',
+    'length' => '128',
+    'not null' => TRUE,
+  ));
+
+  $ret[] = update_sql("UPDATE {yamm_uuid} SET identifier = iid");
+
+  db_drop_field($ret, 'yamm_uuid', 'iid');
+
+  db_add_index($ret, 'yamm_uuid', 'yamm_uuid_identifier_idx', array('identifier'));
+  db_add_unique_key($ret, 'yamm_uuid', 'yamm_uuid_unique_type_identifier', array('type', 'identifier'));
+
+  return $ret;
+}
+
+function yamm_api_update_6002() {
+  $ret = array();
+  db_create_table($ret, 'cache_yamm', drupal_get_schema_unprocessed('system', 'cache'));
+  return $ret;
+}
+
+function yamm_api_update_6003() {
+  $ret = array();
+  db_create_table($ret, 'yamm_data_store', drupal_get_schema_unprocessed('system', 'cache'));
+  return $ret;
+}
+
+function yamm_api_udpate_6004() {
+  $ret = array();
+  db_add_index($ret, 'term_data', 'term_name_idx', array('name'));
+  return $ret;
+}
+
+/**
+ * Adds the last update flag into yamm_uuid table.
+ */
+function yamm_api_update_6005() {
+  $ret = array();
+  db_add_field($ret, 'yamm_uuid', 'updated', array(
+    'description' => 'The Unix timestamp when entity was last updated.',
+    'type' => 'int',
+    'not null' => TRUE,
+    'default' => 0,
+  ));
+  db_add_index($ret, 'yamm_uuid', 'yamm_uuid_updated_idx', array('updated'));
+  return $ret;
+}
