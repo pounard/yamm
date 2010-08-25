@@ -225,6 +225,32 @@ function yamm_server_hook_info() {
 }
 
 /**
+ * Implementation of hook_nodeapi
+ * @param $node
+ * @param $op
+ * @param $a3
+ * @param $a4
+ * @return unknown_type
+ */
+function yamm_server_nodeapi(&$node, $op, $a3 = NULL, $a4 = NULL) {
+  
+  switch ($op) {
+    // Delete UUID element if exists
+    case 'delete':
+      // Getting UUID
+      $uuid = yamm_api_uuid_get('node', $node->nid);
+      
+      // Check if element exists
+      if ($uuid) {
+        // Delete it from database
+        yamm_api_uuid_delete($uuid);
+      }
+      
+      break;
+  }
+}
+
+/**
  * Implementation of hook_yamm_server().
  * 
  * Integrates Yamm with Trigger module
