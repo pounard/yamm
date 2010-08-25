@@ -31,7 +31,7 @@ class Yamm_Entity_VocabularySettings extends Yamm_EntitySettingsAbstract
       '#title' => t('Duplicates handling'),
       '#options' => $options,
       '#description' => t('Define what behavior the the entity should adopt when vocabulary name conflicts with an existing one. Beware, if more than one duplicate is found, the algorithm won\'t merge but will create a new one instead.'),
-      '#default_value' => $this->get('duplicate_behavior', Yamm_EntityVocabularySettings::DUPLICATE_IGNORE),
+      '#default_value' => $this->get('duplicate_behavior', Yamm_Entity_VocabularySettings::DUPLICATE_IGNORE),
     );
 
     return $form;

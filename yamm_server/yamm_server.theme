@@ -110,7 +110,6 @@ function theme_yamm_server_profile_overview($form) {
       $row[] = drupal_render($form['profiles']['radios'][$key]);
       $row[] = drupal_render($form['profiles']['profile'][$key]);
       $row[] = drupal_render($form['profiles']['name'][$key]);
-      $row[] = drupal_render($form['profiles']['operations'][$key]);
       $rows[] = $row;
     }
   }
