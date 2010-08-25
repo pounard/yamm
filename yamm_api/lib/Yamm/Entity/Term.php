@@ -64,27 +64,27 @@ class Yamm_Entity_Term extends Yamm_Entity {
    */
   protected function _constructDependencies($term) {
     // Create vocabulary as dependency
-    $vocabulary_uuid = $this->_addDependency('vocabulary', $term->vid);
-    $this->_setData('vocabulary', $vocabulary_uuid);
+    $vocabulary_uuid = $this->addDependency('vocabulary', $term->vid);
+    $this->setData('vocabulary', $vocabulary_uuid);
 
     // And parents
     $parents = array();
     foreach (taxonomy_get_parents($term->tid) as $_term) {
-      $parent_uuid = $this->_addDependency('term', $_term->tid);
+      $parent_uuid = $this->addDependency('term', $_term->tid);
       $parents[$parent_uuid] = $parent_uuid;
     }
-    $this->_setData('parents', $parents);
+    $this->setData('parents', $parents);
 
     // And relations
     $related = array();
     foreach (taxonomy_get_related($term->tid) as $_term) {
-      $related_uuid = $this->_addDependency('term', $_term->tid);
+      $related_uuid = $this->addDependency('term', $_term->tid);
       $related[$related_uuid] = $related_uuid;
     }
-    $this->_setData('relations', $related);
+    $this->setData('relations', $related);
 
     // And synonyms
-    $this->_setData('synonyms', taxonomy_get_synonyms($term->tid));
+    $this->setData('synonyms', taxonomy_get_synonyms($term->tid));
   }
 
   /**
@@ -94,23 +94,23 @@ class Yamm_Entity_Term extends Yamm_Entity {
    * @return void
    */
   private function __restoreData(&$edit) {
-    $edit['vid'] = (int) Yamm_EntityFactory::getIdentifierByUuid($this->_getData('vocabulary'));
+    $edit['vid'] = (int) Yamm_EntityFactory::getIdentifierByUuid($this->getData('vocabulary'));
     $edit['parent'] = array();
 
     // Restore parents
-    foreach ($this->_getData('parents') as $uuid) {
+    foreach ($this->getData('parents') as $uuid) {
       $tid = (int) Yamm_EntityFactory::getIdentifierByUuid($uuid);
       $edit['parent'][$tid] = $tid;
     }
 
     // Restore relations
-    foreach ($this->_getData('relations') as $uuid) {
+    foreach ($this->getData('relations') as $uuid) {
       $tid = (int) Yamm_EntityFactory::getIdentifierByUuid($uuid);
       $edit['relations'][$tid] = $tid;
     }
 
     // Restore synonyms
-    $edit['synonyms'] = $this->_getData('synonyms');
+    $edit['synonyms'] = $this->getData('synonyms');
   }
 
   /**

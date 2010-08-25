@@ -107,8 +107,9 @@ class Yamm_TransactionHelper
     yamm_api_debug("Transaction " . $this->_tid . " running");
 
     try {
+      // FIXME: This is hardcoded right now, but it will change.
       $fetcher = new Yamm_EntityFetcher_Xmlrpc($this->_server->getUrl(), $this->_tid);
-      $fileFetcher = new Yamm_FileFetcher_Http();
+      $fileFetcher = new Yamm_FileFetcher_Http($this->_server);
       $this->_entityParser = new Yamm_EntityParser($fetcher, $fileFetcher);
       $this->_entityParser->parse();
 

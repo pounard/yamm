@@ -55,6 +55,7 @@ class Yamm_EntityParser
    */
   public function parse() {
     while ($entities = $this->_fetcher->pull()) {
+      yamm_api_debug("Pulling content from server using " . get_class($this->_fetcher), array());
       foreach ($entities as $entity) {
         if (! $this->_alreadyBuilt($entity)) {
           $this->_buildDependencies($entity);
@@ -79,6 +80,7 @@ class Yamm_EntityParser
    * @return boolean
    */
   protected function _alreadyBuilt(Yamm_Entity $entity) {
+    $entity->setParser($this);
     $uuid = $entity->getUuid();
     // array_key_exists performance is way better than any other method
     if (! array_key_exists($uuid, $this->_built)) {

@@ -8,87 +8,42 @@
 
 /**
  * Hook run when registering an entity on server side at pull time. You may use
- * this hook in order to register new entities.
+ * this hook in order to register new entities. You also may use this hook in
+ * order to store custom data that you will get back on the client side.
  * 
- * @param string $type
- *   Entity type.
- * @param int|string $identifier
- *   Entity identifier.
- * @param mixed $object
- *   Entity object.
- * 
- * @return array
- *   Key/value pairs. Keys are dependencies types, values are arrays of
- *   identifier values for the associated type key.
+ * @param Yamm_Entity $entity
+ *   Entity currently being constructed.
  */
-function hook_yamm_entity_dependencies($type, $identifier, $object) {
-  // FIXME: Sample code to do.
-}
-
-/**
- * Hook run when registering an entity on server side at pull time. You may use
- * this hook in order to store custom data that you will get back on the client
- * side.
- * 
- * @param string $type
- *   Entity type.
- * @param int|string $identifier
- *   Entity identifier.
- * @param mixed $object
- *   Entity object.
- * 
- * @return array
- *   Key/value pairs. Keys are string (data identifier) and values are mixed
- *   variables (which must be serializable).
- */
-function hook_yamm_entity_data($type, $identifier, $object) {
+function hook_yamm_entity_construct(Yamm_Entity $entity) {
   // FIXME: Sample code to do.
 }
 
 /**
  * Write this.
  * 
- * @param string $type
- *   Entity type.
- * @param int|string $identifier
- *   Entity identifier.
- * @param mixed $objecty
- *   Entity object.
- * @param array $data = array()
- *   Custom data set by the hook_yamm_entity_data() hook.
+ * @param Yamm_Entity $entity
+ *   Entity currently being constructed.
  */
-function hook_yamm_entity_presave($type, $object, $data = array()) {
+function hook_yamm_entity_presave(Yamm_Entity $entity) {
   // FIXME: Sample code to do.
 }
 
 /**
  * Write this.
  * 
- * @param string $type
- *   Entity type.
- * @param int|string $identifier
- *   Entity identifier.
- * @param mixed $object
- *   Entity object.
- * @param array $data = array()
- *   Custom data set by the hook_yamm_entity_data() hook.
+ * @param Yamm_Entity $entity
+ *   Entity currently being constructed.
  */
-function hook_yamm_entity_update($type, $identifier, $object, $data = array()) {
+function hook_yamm_entity_update(Yamm_Entity $entity) {
   // FIXME: Sample code to do.
 }
 
 /**
  * Write this.
  * 
- * @param string $type
- *   Entity type.
- * @param int|string $identifier
- *   Entity identifier.
- * @param mixed $object
- *   Entity object.
- * @param array $data = array()
- *   Custom data set by the hook_yamm_entity_data() hook.
+ * @param Yamm_Entity $entity
+ *   Entity currently being constructed.
  */
-function hook_yamm_entity_save($type, $identifier, $object, $data = array()) {
+function hook_yamm_entity_save(Yamm_Entity $entity) {
   // FIXME: Sample code to do.
 }

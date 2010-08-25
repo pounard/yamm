@@ -97,6 +97,10 @@ function yamm_api_yamm() {
   	  'file' => $path . '/User.php',
       'base_table' => 'users',
     ),
+    'file' => array(
+      'name' => t('File'),
+      'file' => $path . '/File.php',
+    ),
 /*
     'theme' => array(
       'name' => t('Theme'),
@@ -423,7 +427,9 @@ function yamm_api_uuid_get($type, $identifier) {
  */
 function yamm_api_bootstrap_entity() {
   static $loaded = FALSE;
+
   if (! $loaded) {
+    // Include core API.
     require_once dirname(__FILE__) . '/lib/Yamm/Entity.php';
     require_once dirname(__FILE__) . '/lib/Yamm/EntityFetcher.php';
     require_once dirname(__FILE__) . '/lib/Yamm/EntityParser.php';
@@ -435,6 +441,15 @@ function yamm_api_bootstrap_entity() {
     require_once dirname(__FILE__) . '/lib/Yamm/Server.php';
     require_once dirname(__FILE__) . '/lib/Yamm/TransactionHelper.php';
     require_once dirname(__FILE__) . '/lib/Yamm/EntityFetcher/Xmlrpc.php';
+
+    // Include supported third party modules.
+    $modules = array('filefield');
+    foreach ($modules as $module) {
+      if (module_exists($module)) {
+        require_once dirname(__FILE__) . '/integration/' . $module . '.inc';
+      }
+    }
+
     $loaded = TRUE;
   }
 }
@@ -464,7 +479,10 @@ function yamm_api_debug_mode() {
  * Log a debug message
  * 
  * @param string $message
- *   Message to send to debug 
+ *   Message to send to debug
+ * @param array $variables = array()
+ *   (optional) Same signature as t() function, this is the variables for
+ *   message inclusion.
  */
 function yamm_api_debug($message, $variables = array()) {
   global $debug;

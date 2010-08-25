@@ -25,21 +25,21 @@ class Yamm_Entity_Node extends Yamm_Entity
    */
   protected function _constructDependencies($node) {
     // Dependency on content type.
-    $this->_addDependency('content', $node->type);
+    $this->addDependency('content', $node->type);
 
     // Dependency on user, only if exists.
     if ($node->uid && ($user = user_load($node->uid))) {
-      $user_uuid = $this->_addDependency('user', $user->uid);
-      $this->_setData('user', $user_uuid);
+      $user_uuid = $this->addDependency('user', $user->uid);
+      $this->setData('user', $user_uuid);
     }
 
     // Dependency on terms.
     $terms = array();
     foreach ($node->taxonomy as $term) {
-      $term_uuid = $this->_addDependency('term', $term->tid);
+      $term_uuid = $this->addDependency('term', $term->tid);
       $terms[] = $term_uuid;
     }
-    $this->_setData('terms', $terms);
+    $this->setData('terms', $terms);
 
     // Handle node reference fields.
     $nodes = array();
@@ -48,13 +48,13 @@ class Yamm_Entity_Node extends Yamm_Entity
         $nodes[$field_name] = array();
         foreach ($value as $index => $referenced) {
           if (! empty($referenced['nid'])) {
-            $node_uuid = $this->_addDependency('node', $referenced['nid']);
+            $node_uuid = $this->addDependency('node', $referenced['nid']);
             $nodes[$field_name][$index] = $node_uuid;
           }
         }
       }
     }
-    $this->_setData('nodes', $nodes);
+    $this->setData('nodes', $nodes);
 
     // TODO handle file and media fields, for this, we need abstract file
     // fetching through our entity parser.
@@ -70,19 +70,19 @@ class Yamm_Entity_Node extends Yamm_Entity
     unset($node->revision);
 
     // Restore owner
-    if ($user_uuid = $this->_getData('user')) {
+    if ($user_uuid = $this->getData('user')) {
       $node->uid = (int) Yamm_EntityFactory::getIdentifierByUuid($user_uuid);
     }
 
     // Restore terms
     $node->taxonomy = array();
-    foreach ($this->_getData('terms') as $term_uuid) {
+    foreach ($this->getData('terms') as $term_uuid) {
       $tid = (int) Yamm_EntityFactory::getIdentifierByUuid($term_uuid);
       $node->taxonomy[$tid] = $tid;
     }
 
     // Restore node referenced nodes
-    foreach ($this->_getData('nodes') as $field_name => $value) {
+    foreach ($this->getData('nodes') as $field_name => $value) {
       foreach ($value as $index => $node_uuid) {
         $referenced = (int) Yamm_EntityFactory::getIdentifierByUuid($node_uuid);
         $node->{$field_name}[$index] = array('nid' => $referenced);

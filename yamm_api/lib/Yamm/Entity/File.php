@@ -50,6 +50,7 @@ class Yamm_Entity_File extends Yamm_Entity
     // Return file definition from files table.
     $file = db_fetch_object(db_query('SELECT f.* FROM {files} f WHERE f.fid = %d', $identifier));
     $file->md5sum = md5_file($file->filepath);
+    return $file;
   }
 
   /**
@@ -58,7 +59,7 @@ class Yamm_Entity_File extends Yamm_Entity
    */
   protected function _constructDependencies($object) {
     if ($object->uid) {
-    	$this->_addDependency('user', $object->uid);
+    	$this->addDependency('user', $object->uid);
     }
   }
 
@@ -67,7 +68,13 @@ class Yamm_Entity_File extends Yamm_Entity
    * @see Entity::_save()
    */
   protected function _save($object) {
-    
+    unset($object->fid);
+    $this->getParser()->getFileFetcher()->fetchDrupalFile($object, 0, FALSE);
+    $object->status = FILE_STATUS_PERMANENT;
+    $object->timestamp = time();
+    $object->filemime = file_get_mimetype($filename);
+    drupal_write_record('files', $object);
+    return $object->fid;
   }
 
   /**
@@ -79,6 +86,7 @@ class Yamm_Entity_File extends Yamm_Entity
   	$localFile = db_fetch_object(db_query('SELECT f.* FROM {files} f WHERE f.fid = %d', $identifier));
   	if (md5_file($localFile->filepath) != $object->md5sum) {
   		// Download the file and save it.
+  		$this->getParser()->getFileFetcher()->fetchDrupalFile($object, 0, TRUE);
   	}
   }
 }

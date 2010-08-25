@@ -159,14 +159,13 @@ class Yamm_EntityFactory
    * @return string
    */
   public static function getUuidForType($type, $identifier, $generate = FALSE) {
-    if (! $uuid = yamm_api_uuid_get($type, $identifier)) {
+    if (!$uuid = yamm_api_uuid_get($type, $identifier)) {
       if ($generate) {
         $uuid = yamm_api_uuid_create();
         yamm_api_uuid_save($uuid, $type, $identifier);
       }
       else {
-        throw new Yamm_Entity_UnknownUuidException(
-          "Unable to fetch UUID for type " . $type . ", identifier " . $identifier . ".");
+        throw new Yamm_Entity_UnknownUuidException("Unable to fetch UUID for type " . $type . ", identifier " . $identifier . ".");
       }
     }
     return $uuid;
@@ -330,7 +329,7 @@ abstract class Yamm_Entity
   public static function loadByUuid($uuid) {
     if ($uuid_data = yamm_api_uuid_load($uuid)) {
       $class = Yamm_EntityFactory::findClass($uuid_data->type);
-      return new $class($uuid, $uuid_data->identifier);
+      return new $class($uuid);
     }
     throw new Yamm_Entity_UnknownUuidException("UUID " . $uuid . " does not exists in database.");
   }
@@ -427,6 +426,16 @@ abstract class Yamm_Entity
   }
 
   /**
+   * Set the current entity parser. Use this only if you are in the parser
+   * itself.
+   * 
+   * @param Yamm_EntityParser $parser
+   */
+  public function setParser(Yamm_EntityParser $parser) {
+    $this->__parser = $parser;
+  }
+
+  /**
    * Internal type.
    * 
    * @var string
@@ -465,6 +474,10 @@ abstract class Yamm_Entity
    */
   private $__object;
 
+  public function getObject() {
+    return $this->__object;
+  }
+
   /**
    * UUID.
    * 
@@ -495,7 +508,7 @@ abstract class Yamm_Entity
    * 
    * @return mixed
    */
-  protected function _getData($key) {
+  public function getData($key) {
     return $this->__data[$key];
   }
 
@@ -506,7 +519,7 @@ abstract class Yamm_Entity
    * 
    * @param mixed $value
    */
-  protected function _setData($key, $value) {
+  public function setData($key, $value) {
     $this->__data[$key] = $value;
   }
 
@@ -544,7 +557,7 @@ abstract class Yamm_Entity
    * @return string
    *   Object UUID you can then store as data.
    */
-  protected function _addDependency($type, $idenfier) {
+  public function addDependency($type, $idenfier) {
     $uuid = Yamm_EntityFactory::getUuidForType($type, $idenfier, TRUE);
     $this->__dependencies[$uuid] = $uuid;
     return $uuid;
@@ -571,54 +584,35 @@ abstract class Yamm_Entity
     }
     $this->__object = $object;
     $this->_constructDependencies($this->__object);
-    $this->__hookDependencies();
-    $this->__hookData();
+    $this->__hookConstruct();
   }
 
   /**
    * Execute dependencies hook.
    */
-  private function __hookDependencies() {
-    $result = Yamm_EntityFactory::executeHook('data', $this->__type, $this->__identifier, $this->__object);
-    // Add dependencies.
-    if (! empty($result)) {
-      foreach (result as $type => $identifierList) {
-        foreach ($identifierList as $identifier) {
-          $this->_addDependency($type, $identifier);
-        }
-      }
-    }
-  }
-
-  /**
-   * Execute data hook.
-   */
-  private function __hookData() {
-    $result = Yamm_EntityFactory::executeHook('data', $this->__type, $this->__identifier, $this->__object);
-    if (! empty($result)) {
-      $this->_setData('_external_module_data', $result);
-    }
+  private function __hookConstruct() {
+    $result = Yamm_EntityFactory::executeHook('construct', $this);
   }
 
   /**
    * Execute presave hook.
    */
   private function __hookPresave() {
-    Yamm_EntityFactory::executeHook('presave', $this->__type, $this->__object, $this->_getData('_external_module_data'));
+    Yamm_EntityFactory::executeHook('presave', $this);
   }
 
   /**
    * Execute update hook.
    */
   private function __hookUpdate() {
-    Yamm_EntityFactory::executeHook('update', $this->__type, $this->__identifier, $this->__object, $this->_getData('_external_module_data'));
+    Yamm_EntityFactory::executeHook('update', $this);
   }
 
   /**
    * Execute save hook.
    */
   private function __hookSave() {
-    Yamm_EntityFactory::executeHook('save', $this->__type, $this->__identifier, $this->__object, $this->_getData('_external_module_data'));
+    Yamm_EntityFactory::executeHook('save', $this);
   }
 
   private function __setTypeFromClass() {

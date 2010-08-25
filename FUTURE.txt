@@ -1,0 +1,6 @@
+; $Id$
+Yamm future developments
+========================
+
+In order to support D7, Yamm should intensively use the Entity system, that
+would allow a better support for all entity types in only one "Yamm Entity".

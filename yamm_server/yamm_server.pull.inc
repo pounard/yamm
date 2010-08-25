@@ -11,7 +11,6 @@
  */
 function _yamm_server_client_pull_cb($tid) {
   yamm_server_bootstrap_sync();
-
   return yamm_server_get_entities_from_profile($tid);
 }
 
