@@ -69,6 +69,7 @@ function yamm_server_menu() {
    * CRUD operations on profiles
    */
 
+  
   $items['admin/yamm/profile'] = array(
     'title' => 'Profiles overview',
     'description' => 'Manage, add, delete profiles',
@@ -77,6 +78,7 @@ function yamm_server_menu() {
     'access arguments' => array('administer sync server'),
     'file' => 'yamm_server.admin.inc',
   );
+  
   $items['admin/yamm/profile/add'] = array(
     'title' => 'Create profile',
     'page callback' => 'drupal_get_form',
@@ -85,19 +87,32 @@ function yamm_server_menu() {
     'file' => 'yamm_server.admin.inc',
     'type' => MENU_CALLBACK,
   );
+  
   $items['admin/yamm/profile/edit/%yamm_server_profile'] = array(
-    'title' => 'Edit profile',
-    'page callback' => 'drupal_get_form',
-    'page arguments' => array('yamm_server_profile', 4),
+    'title'            => 'Edit profile',
+    'page callback'    => 'drupal_get_form',
+    'page arguments'   => array('yamm_server_profile', 4),
     'access arguments' => array('administer sync server'),
-    'file' => 'yamm_server.admin.inc',
-    'type' => MENU_CALLBACK,
+    'file'             => 'yamm_server.admin.inc',
+    'type'             => MENU_CALLBACK,
   );
+  
+  $items['admin/yamm/profile/delete/%'] = array(
+    'title'            => t('Delete profile'),
+    'description'      => t('Delete a profile'),
+    'page callback'    => 'drupal_get_form',
+    'page arguments'   => array('yamm_profile_delete_confirm', 4),
+    'access arguments' => array('administer sync server'),  
+    'type'             => MENU_CALLBACK,
+    'file'             => 'yamm_server.admin.inc',
+  );
+  
   $items['admin/yamm/profile/edit/%yamm_server_profile/form'] = array(
-    'title' => t('Properties'),
-    'type' => MENU_DEFAULT_LOCAL_TASK,
+    'title'  => t('Properties'),
+    'type'   => MENU_DEFAULT_LOCAL_TASK,
     'weight' => 1,
   );
+  
   $items['admin/yamm/profile/edit/%yamm_server_profile/settings'] = array(
     'title' => 'Entities settings',
     'page callback' => 'drupal_get_form',

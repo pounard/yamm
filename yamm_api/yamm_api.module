@@ -180,6 +180,9 @@ function yamm_api_get_entities() {
             $arg = array('@type' => $type, '@module' => $module);
             watchdog('yamm_api', $msg, $arg, WATCHDOG_ERROR);
             continue;
+          } 
+          else {
+            $base_tables[$definition['base_table']] = TRUE;
           }
 
           $definition['module'] = $module;
