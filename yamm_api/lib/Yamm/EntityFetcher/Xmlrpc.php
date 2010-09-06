@@ -7,13 +7,6 @@
 class Yamm_EntityFetcher_Xmlrpc extends Yamm_EntityFetcher
 {
   /**
-   * Master URL.
-   * 
-   * @var string
-   */
-  protected $_serverUrl = NULL;
-
-  /**
    * Transaction identifier.
    * 
    * @var string
@@ -28,8 +21,7 @@ class Yamm_EntityFetcher_Xmlrpc extends Yamm_EntityFetcher
    * @param string $tid
    *   Transaction identifier.
    */
-  public function __construct($serverUrl, $tid) {
-    $this->_serverUrl = $serverUrl;
+  public function __construct($tid) {
     $this->_transactionId = $tid;
   }
 
@@ -47,7 +39,7 @@ class Yamm_EntityFetcher_Xmlrpc extends Yamm_EntityFetcher
   private function &__getEntities($method) {
     $ret = array();
 
-    if (! $this->_serverUrl) {
+    if (! $this->_server) {
       throw new Yamm_EntityFetcherException("No server configured");
     }
 
@@ -55,7 +47,7 @@ class Yamm_EntityFetcher_Xmlrpc extends Yamm_EntityFetcher
     $method = array_shift($args);
     array_unshift($args, $this->_transactionId);
     array_unshift($args, $method);
-    array_unshift($args, $this->_serverUrl);
+    array_unshift($args, $this->_server->getUrl());
 
     $result = call_user_func_array('yamm_api_xmlrpc_call', $args);
 
@@ -65,8 +57,8 @@ class Yamm_EntityFetcher_Xmlrpc extends Yamm_EntityFetcher
 
     // Result can be empty (no dependencies)
     if (! empty($result['data'])) {
-      foreach ($result['data'] as $serializeEntity) {
-        $ret[] = Yamm_Entity::unserialize($serializeEntity);
+      foreach ($result['data'] as $serializedEntity) {
+        $ret[] = Yamm_Entity::unserialize($serializedEntity);
       }
     }
 

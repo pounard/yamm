@@ -34,7 +34,7 @@ function _yamm_server_client_pull_dependencies($tid, $uuid_array) {
       $ret[] = Yamm_Entity::serialize($entity);
     }
     catch (Yamm_EntityException $e) {
-      // We could not construct this entity, but treat the other
+      // We could not construct this entity, but treat the other.
       watchdog('yamm_pull', '@e',  array('@e' => $e->getMessage()), WATCHDOG_DEBUG);
     }
   }
@@ -112,12 +112,12 @@ function yamm_server_get_entities_from_profile($tid) {
             $ret[] = Yamm_Entity::serialize($entity);
           }
           catch (Yamm_EntityException $e) {
-            // We could not construct this entity, but treat the other
+            // We could not construct this entity, but treat the other.
             watchdog('yamm_pull', '@e', array('@e' => $e->getMessage()), WATCHDOG_ERROR);
           }
         }
 
-        // Check we have finished the view results
+        // Check we have finished the view results.
         if ($count < $limit) {
           $transaction->state['finished'][] = $view->name;
           $transaction->state['offset'] = 0;
@@ -137,7 +137,7 @@ function yamm_server_get_entities_from_profile($tid) {
         watchdog('yamm_pull', '@e', array('@e' => $e->getMessage()), WATCHDOG_ERROR);
       }
 
-      // Keep some memory to survive
+      // Keep some memory to survive.
       unset($view);
     }
 
@@ -148,6 +148,6 @@ function yamm_server_get_entities_from_profile($tid) {
   }
 
   // Whatever happens, if we get here, we had an unrecoverable error, return
-  // FALSE to notify client something wrong happend
+  // FALSE to notify client something wrong happened.
   return FALSE;
 }

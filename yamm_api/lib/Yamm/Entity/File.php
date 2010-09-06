@@ -72,7 +72,7 @@ class Yamm_Entity_File extends Yamm_Entity
     $this->getParser()->getFileFetcher()->fetchDrupalFile($object, 0, FALSE);
     $object->status = FILE_STATUS_PERMANENT;
     $object->timestamp = time();
-    $object->filemime = file_get_mimetype($filename);
+    yamm_api_file_get_mime($object, TRUE);
     drupal_write_record('files', $object);
     return $object->fid;
   }
@@ -87,6 +87,9 @@ class Yamm_Entity_File extends Yamm_Entity
   	if (md5_file($localFile->filepath) != $object->md5sum) {
   		// Download the file and save it.
   		$this->getParser()->getFileFetcher()->fetchDrupalFile($object, 0, TRUE);
+  		// Re-detect the file mime type.
+  		yamm_api_file_get_mime($object, TRUE);
+  		drupal_write_record('files', $object, array('fid'));
   	}
   }
 }

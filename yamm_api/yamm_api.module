@@ -179,14 +179,16 @@ function yamm_api_get_entities() {
           }
 
           // Check for base_table conflicts
-          if (isset($base_tables[$definition['base_table']])) {
-            $msg = "Entity '@type' defined by module '@module' conflicts, it uses an already defined base_table";
-            $arg = array('@type' => $type, '@module' => $module);
-            watchdog('yamm_api', $msg, $arg, WATCHDOG_ERROR);
-            continue;
-          } 
-          else {
-            $base_tables[$definition['base_table']] = TRUE;
+          if (isset($definition['base_table'])) {
+            if (isset($base_tables[$definition['base_table']])) {
+              $msg = "Entity '@type' defined by module '@module' conflicts, it uses an already defined base_table";
+              $arg = array('@type' => $type, '@module' => $module);
+              watchdog('yamm_api', $msg, $arg, WATCHDOG_ERROR);
+              continue;
+            } 
+            else {
+              $base_tables[$definition['base_table']] = TRUE;
+            }
           }
 
           $definition['module'] = $module;
@@ -199,6 +201,33 @@ function yamm_api_get_entities() {
   }
 
   return $entities_definition;
+}
+
+/**
+ * Get file mimetype using the maximum methods possible, with a default
+ * fallback to file_get_mime().
+ * 
+ * @param object $file
+ *   Drupal file database row.
+ * @param boolean $set = TRUE
+ *   (optional) Set new mime type to file.
+ * 
+ * @return string
+ *   Detected file mimetype.
+ */
+function yamm_api_file_get_mime($file, $set = TRUE) {
+  if (function_exists('mimedetect_mime')) {
+    $mime = mimedetect_mime($file);
+  }
+  else {
+    $mime = file_get_mimetype($file->filename);
+  }
+
+  if ($set) {
+    $file->filemime = $mime;
+  }
+
+  return $mime;
 }
 
 /**
@@ -483,7 +512,7 @@ function yamm_api_debug_mode() {
  * 
  * @param string $message
  *   Message to send to debug
- * @param array $variables = array()
+ * @param array $variables = NULL
  *   (optional) Same signature as t() function, this is the variables for
  *   message inclusion.
  */
@@ -492,8 +521,13 @@ function yamm_api_debug($message, $variables = array()) {
 
   // If daemoncli is in debug mode, output into console.
   if ($debug) {
-    $t = get_t();
-    print($t($message, $variables) . "\n");
+    if ($variables === NULL) {
+      print($message . "\n");
+    }
+    else {
+      $t = get_t();
+      print($t($message, $variables) . "\n");
+    }
   }
 
   if (yamm_api_debug_mode()) {

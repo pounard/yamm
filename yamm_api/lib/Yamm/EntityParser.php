@@ -115,13 +115,13 @@ class Yamm_EntityParser
     $this->_pruneDependencies($dependencies);
     yamm_api_debug("Entity parser got @count dependencies", array('@count' => count($dependencies)));
 
-    // Go and unpack them
+    // Go and unpack them.
     foreach ($this->_fetcher->fetchDependencies($dependencies) as $depEntity) {
 
-      // Check for already builded ones (circular dependencies)
+      // Check for already builded ones (circular dependencies).
       if (! $this->_alreadyBuilt($depEntity)) {
 
-        // And build it
+        // And build it.
         $this->_buildDependencies($depEntity);
       }
     }

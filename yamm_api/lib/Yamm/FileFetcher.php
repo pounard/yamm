@@ -76,19 +76,16 @@ abstract class Yamm_FileFetcher implements Yamm_FileFetcherInterface
     $dest = file_destination(file_create_path($dest) . '/' . $file->filename, ($replace ? FILE_EXISTS_REPLACE : FILE_EXISTS_RENAME));
     yamm_api_debug("Copying file " . $src . " to " . $dest);
     // Copy the temporary file as the real file.
-    if ($error = !@copy($src, $dest)) {
-      
-    }
-    $error = !file_copy($src, $dest, ($replace ? FILE_EXISTS_REPLACE : FILE_EXISTS_ERROR));
-    
-    // Throw our exception in case of any error.
-    if ($error) {
-      throw new Yamm_FileFetcher_CouldNotSaveException("File " . $src . " could not copied to " . $dest);
-    }
+    $error = !copy($src, $dest);
     // In all case, remove the temporary file. Be silent here, whatever happens.
     // In case of unlink failure, only put a warning message in watchdog.
-    if (!@unlink($src)) {
+    if (!unlink($src)) {
       watchdog('yamm', "Temporary file " . $src . " could not be deleted", NULL, WATCHDOG_WARNING);
+    }
+    // Treat error after having the file removed.
+    if ($error) {
+      yamm_api_debug("Error while copying file " . $src . " to " . $dest);
+      throw new Yamm_FileFetcher_CouldNotSaveException("File " . $src . " could not copied to " . $dest);
     }
     // Set the new filepath to our file structure.
     $file->filepath = $dest;
@@ -99,6 +96,7 @@ abstract class Yamm_FileFetcher implements Yamm_FileFetcherInterface
 	 * @see Yamm_FileFetcherInterface::fetchArbitraryFile()
 	 */
 	public function fetchArbitraryFile($filepath, $dest = 0, $replace = FALSE) {
+	  throw new Yamm_FileFetcher_CouldNotFetchException("Yamm_FileFetcherInterface::fetchArbitraryFile() must be rewritten.");
     // Fetch the real file as a temporary file.
     $src = $this->_fetch($filepath);
     $filename = end(explode('/', $filepath));

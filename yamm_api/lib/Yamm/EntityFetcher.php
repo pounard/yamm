@@ -35,6 +35,14 @@ interface Yamm_EntityFetcherInterface
    *   In case of network error.
    */
   public function fetchDependencies(array $dependencies);
+
+  /**
+   * Set server. This will be called right after being instanciated.
+   * 
+   * @param Yamm_Server $server
+   *   Server instance.
+   */
+  public function setServer(Yamm_Server $server);
 }
 
 /**
@@ -43,6 +51,19 @@ interface Yamm_EntityFetcherInterface
  */
 abstract class Yamm_EntityFetcher implements Yamm_EntityFetcherInterface
 {
+  /**
+   * @var Yamm_Server
+   */
+  protected $_server;
+
+  /**
+   * (non-PHPdoc)
+   * @see Yamm_EntityFetcherInterface::setServer()
+   */
+  public function setServer(Yamm_Server $server) {
+    $this->_server = $server;
+  }
+
   /**
    * (non-PHPdoc)
    * @see Yamm_EntityFetcherInterface::pull()

@@ -62,7 +62,7 @@ function filefield_yamm_entity_presave(Yamm_Entity $entity) {
               // Fid should exits, except if any fatal error happened.
               if ($fid = Yamm_EntityFactory::getIdentifierByUuid($uuid)) {
                 $file = db_fetch_array(db_query("SELECT * FROM {files} WHERE fid = %d", $fid));
-                $node->{$field_name} = array_merge($item, $file);
+                $node->{$field_name}[$key] = array_merge($item, $file);
               }
               // We found it, break here.
               break;
