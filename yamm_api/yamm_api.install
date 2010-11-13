@@ -24,7 +24,7 @@ function yamm_api_requirements($phase) {
         'severity' => REQUIREMENT_INFO
       );
     }
-    if (! function_exists('uuid_create')) {
+    if (!_yamm_api_uuid_enabled()) {
       $requirements['yamm_api_uuid'] = array(
         'title' => $t('Yamm UUID'),
         'value' => $t('Yamm API module uses the PECL::Package::UUID extention if present to generate correct V4 UUID, you should consider install it before server.'),

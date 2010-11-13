@@ -13,7 +13,7 @@ class Yamm_Entity_TermSettings extends Yamm_EntitySettingsAbstract {
 
   /**
    * (non-PHPdoc)
-   * @see www/sites/all/modules/custom/yamm/yamm_api/Yamm_EntitySettingsAbstract#settingsForm()
+   * @see Yamm_EntitySettingsAbstract::settingsForm()
    */
   public function form() {
     $form = array();
@@ -30,15 +30,15 @@ class Yamm_Entity_TermSettings extends Yamm_EntitySettingsAbstract {
 
   /**
    * (non-PHPdoc)
-   * @see www/sites/all/modules/custom/yamm/yamm_api/Yamm_EntitySettingsAbstract#formValidate()
+   * @see Yamm_EntitySettingsAbstract::formValidate()
    */
   public function formValidate($values) {
-    // Nothing to validate
+    // Nothing to validate.
   }
 
   /**
    * (non-PHPdoc)
-   * @see www/sites/all/modules/custom/yamm/yamm_api/Yamm_EntitySettingsAbstract#formSubmit($values)
+   * @see Yamm_EntitySettingsAbstract::formSubmit)
    */
   public function formSubmit($values) {
     $this->set('merge_duplicates', (bool) $values['merge_duplicates']);
@@ -52,7 +52,7 @@ class Yamm_Entity_Term extends Yamm_Entity {
 
   /**
    * (non-PHPdoc)
-   * @see www/sites/all/modules/custom/yamm/yamm_api/Entity#_objectLoad($identifier)
+   * @see Entity::_objectLoad()
    */
   protected function _objectLoad($tid) {
     return taxonomy_get_term((int) $tid);
@@ -60,7 +60,7 @@ class Yamm_Entity_Term extends Yamm_Entity {
 
   /**
    * (non-PHPdoc)
-   * @see www/sites/all/modules/custom/yamm/yamm_api/Entity#_constructDependencies($object)
+   * @see Entity::_constructDependencies()
    */
   protected function _constructDependencies($term) {
     // Create vocabulary as dependency
@@ -181,7 +181,7 @@ class Yamm_Entity_Term extends Yamm_Entity {
 
   /**
    * (non-PHPdoc)
-   * @see www/sites/all/modules/custom/yamm/yamm_api/Entity#_save($object)
+   * @see Entity::_save()
    */
   protected function _save($term) {
     $edit = (array) $term;
@@ -197,7 +197,7 @@ class Yamm_Entity_Term extends Yamm_Entity {
 
   /**
    * (non-PHPdoc)
-   * @see www/sites/all/modules/custom/yamm/yamm_api/Entity#_update($object, $identifier)
+   * @see Entity::_update()
    */
   protected function _update($term, $tid) {
     $edit = (array) $term;

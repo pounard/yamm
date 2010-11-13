@@ -364,7 +364,7 @@ function yamm_api_xmlrpc_call($url, $method) {
 /**
  * Internal wrapper to create uuid using php-uuid
  */
-function _yamm_api_uuid_create() {
+function _yamm_api_uuid_create_old() {
   static $uuid_object = NULL;
 
   $ret = '';
@@ -380,6 +380,50 @@ function _yamm_api_uuid_create() {
 }
 
 /**
+ * Check if PHP UUID pear extension is installed and enabled.
+ * 
+ * @return mixed
+ *   FALSE if not present.
+ *   1 if version older than 1.0 is installed.
+ *   2 if version newer than 1.0 is enabled.
+ */
+function _yamm_api_uuid_enabled() {
+  static $enabled;
+
+  if (!isset($enabled)) {
+
+    // Attempt to load extension.
+    if (!$loaded = extension_loaded('uuid')) {
+      $loaded = dl('uuid');
+    }
+
+    // Check extension version.
+    if ($loaded) {
+
+      // Check for older version.
+      if (function_exists('uuid_make') && function_exists('uuid_export')) {
+        $enabled = 1;
+      }
+
+      // Even if this should not be an 'else if' statement, we may have not the
+      // function if the extension evolve to something else, we should fallback
+      // then.
+      else if (function_exists('uuid_create')) {
+        $enabled = 2;
+      }
+    }
+
+    // Default fallback, the library won't exists, or we can't use it because
+    // they are missing functions.
+    if (!isset($enabled)) {
+      $enabled = FALSE;
+    }
+  }
+
+  return $enabled;
+}
+
+/**
  * Generate a random uuid, time based
  *
  * @return string
@@ -388,14 +432,18 @@ function yamm_api_uuid_create() {
   static $ext = NULL;
 
   if ($ext === NULL) {
-    $ext = (bool) function_exists('uuid_create');
+    $ext = _yamm_api_uuid_enabled();
   }
 
-  if ($ext) {
-    return _yamm_api_uuid_create();
-  }
-  else {
-    return str_replace(".", "", (string) uniqid(rand(), TRUE));
+  switch ($ext) {
+    case 1:
+      return _yamm_api_uuid_create_old();
+
+    case 2:
+      return uuid_create(UUID_TYPE_RANDOM);
+
+    default:
+      return str_replace(".", "", (string) uniqid(rand(), TRUE));
   }
 }
 

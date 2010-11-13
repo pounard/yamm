@@ -196,24 +196,24 @@ class Yamm_Entity_Content extends Yamm_Entity
    */
   private function __revisionContent($new_export, $type_name) {
 
-    // Compare both content types
+    // Compare both content types.
     $data = cache_get('content_entity_' . $type_name, $table = 'yamm_data_store');
     $old_hash = $data->data;
     $new_hash = md5($new_export);
 
     if ($old_hash != $new_hash) {
-      // Duplicate content, change its name
+      // Duplicate content, change its name.
       $revision = time();
       $new_name = $type_name . '-' . $revision;
       db_query("UPDATE {node_type} SET type = '%s', name = CONCAT(name, ' Revision %s') WHERE type = '%s'", array($new_name, $revision, $type_name));
 
-      // Generate and save new UUID for old type
+      // Generate and save new UUID for old type.
       Yamm_EntityFactory::getUuidForType('content', $new_name, TRUE);
 
-      // Update all nodes
+      // Update all nodes.
       db_query("UPDATE {node} SET type = '%s' WHERE type = '%s'", array($new_name, $type_name));
 
-      // Save won't rely on cache
+      // Save won't rely on cache.
       content_clear_type_cache();
 
       $this->_save($new_export);

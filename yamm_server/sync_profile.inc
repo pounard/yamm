@@ -46,10 +46,10 @@ class SyncProfile
     $ret = array();
 
     if (! $limit) {
-      $result = db_query("SELECT profile,name FROM {yamm_server_profile}");
+      $result = db_query("SELECT profile, name FROM {yamm_server_profile}");
     }
     else {
-      $result = pager_query("SELECT profile,name FROM {yamm_server_profile}", $limit, $element);
+      $result = pager_query("SELECT profile, name FROM {yamm_server_profile}", $limit, $element);
     }
 
     while ($data = db_fetch_object($result)) {
