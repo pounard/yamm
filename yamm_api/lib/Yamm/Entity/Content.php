@@ -22,7 +22,7 @@ class Yamm_Entity_ContentSettings extends Yamm_EntitySettingsAbstract
       '#type' => 'checkbox',
       '#title' => 'EXPERIMENTAL ' . t('Content type revisions'),
       '#description' => t('If you check this option, modified content types will be copied with a new name, time based. All node associated to old content type will be moved to the content type revision. Note that it will break your views which are content_type based, and could break some other modules behavior.'),
-      '#default_value' => $this->get('contentRevision', FALSE),
+      '#default_value' => $this->getOption('contentRevision', FALSE),
     );
 
     $form['contentBehavior'] = array(
@@ -35,7 +35,7 @@ class Yamm_Entity_ContentSettings extends Yamm_EntitySettingsAbstract
         self::MODULE_OVERRIDE => t('Whatever happens, save the content type'),
       ),
       '#description' => t('Behavior to adopt when updating or inserting a module defined content type.'),
-      '#default_value' => $this->get('contentBehavior', self::MODULE_OVERRIDE));
+      '#default_value' => $this->getOption('contentBehavior', self::MODULE_OVERRIDE));
 
     return $form;
   }
@@ -44,7 +44,7 @@ class Yamm_Entity_ContentSettings extends Yamm_EntitySettingsAbstract
    * (non-PHPdoc)
    * @see Yamm_EntitySettingsAbstract::formValidate()
    */
-  public function formValidate($values) {
+  public function formValidate(&$values) {
     // Nothing to validate
   }
 
@@ -52,9 +52,9 @@ class Yamm_Entity_ContentSettings extends Yamm_EntitySettingsAbstract
    * (non-PHPdoc)
    * @see Yamm_EntitySettingsAbstract::formSubmit()
    */
-  public function formSubmit($values) {
-    $this->set('contentRevision', (bool) $values['contentRevision']);
-    $this->set('contentBehavior', (int) $values['contentBehavior']);
+  public function formSubmit(&$values) {
+    $this->setOption('contentRevision', (bool) $values['contentRevision']);
+    $this->setOption('contentBehavior', (int) $values['contentBehavior']);
   }
 }
 
@@ -110,7 +110,7 @@ class Yamm_Entity_Content extends Yamm_Entity
     // Basic behavior options.
     $overwrite = FALSE;
 
-    switch ($this->getSettings()->get('contentBehavior', Yamm_Entity_ContentSettings::MODULE_OVERRIDE)) {
+    switch ($this->getSettings()->getOption('contentBehavior', Yamm_Entity_ContentSettings::MODULE_OVERRIDE)) {
       case Yamm_Entity_ContentSettings::MODULE_IGNORE:
         return;
 
@@ -168,7 +168,7 @@ class Yamm_Entity_Content extends Yamm_Entity
    * @see Entity::_update()
    */
   protected function _update($export, $type_name) {
-    if ($this->getSettings()->get('contentRevision', FALSE)) {
+    if ($this->getSettings()->getOption('contentRevision', FALSE)) {
 
       // As all migrated nodes will have the new type, we don't have to worry
       // about other data to import.

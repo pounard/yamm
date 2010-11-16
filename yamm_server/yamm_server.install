@@ -132,34 +132,15 @@ function yamm_server_schema() {
     ),
   );
 
-  $schema['yamm_server_profile'] = array(
-    'fields' => array(
-      'profile' => array(
-        'type' => 'varchar',
-        'length' => '64',
-        'not null' => TRUE,
-        'description' => 'Unique name',
-      ),
-      'name' => array(
-        'type' => 'varchar',
-        'length' => '64',
-        'not null' => TRUE,
-        'description' => 'Unique name',
-      ),
-      'data' => array(
-        'type' => 'blob',
-        'not null' => TRUE,
-        'description' => 'Serialized object',
-      ),
-    ),
-    'primary key' => array('profile'),
-    'indexes' => array('yamm_server_profile_name_idx' => array('name')),
-  );
+  // Profiles table.
+  $schema['yamm_server_profile'] = drupal_get_schema_unprocessed('xoxo', 'xoxo_object');
 
   return $schema;
 }
 
 /**
+ * Implementation of hook_update_N().
+ * 
  * Don't ask why there is no 6001 update. Let's say I was very lazzy to do an
  * sql query to update system table because the first try failed.
  */
@@ -174,6 +155,9 @@ function yamm_server_update_6002() {
   return $ret;
 }
 
+/**
+ * Implementation of hook_update_N().
+ */
 function yamm_server_update_6003() {
   $ret = array();
   db_add_field($ret, 'yamm_server_client', 'username', array(
@@ -189,6 +173,8 @@ function yamm_server_update_6003() {
 }
 
 /**
+ * Implementation of hook_update_N().
+ * 
  * See update 6002 comment.
  */
 function yamm_server_update_6006() {
@@ -210,6 +196,9 @@ function yamm_server_update_6006() {
   return $ret;
 }
 
+/**
+ * Implementation of hook_update_N().
+ */
 function yamm_server_update_6007() {
   $ret = array();
   db_drop_field($ret, 'yamm_server_transaction', 'view');
@@ -222,6 +211,9 @@ function yamm_server_update_6007() {
   return $ret;
 }
 
+/**
+ * Implementation of hook_update_N().
+ */
 function yamm_server_update_6008() {
   $ret = array();
   db_add_field($ret, 'yamm_server_transaction', 'manual', array(
@@ -234,6 +226,9 @@ function yamm_server_update_6008() {
   return $ret;
 }
 
+/**
+ * Implementation of hook_update_N().
+ */
 function yamm_server_update_6009() {
   $ret = array();
   db_add_field($ret, 'yamm_server_transaction', 'last_update', array(
@@ -242,5 +237,30 @@ function yamm_server_update_6009() {
     'not null' => TRUE,
     'default' => 0,
   ));
+  return $ret;
+}
+
+/**
+ * Implementation of hook_update_N().
+ */
+function yamm_server_update_6010() {
+  $ret = array();
+  db_add_field($ret, 'yamm_server_profile', 'backend', array(
+    'type' => 'varchar',
+    'length' => '64',
+    'not null' => TRUE,
+    'description' => 'Backend type',
+  ));
+  return $ret;
+}
+
+/**
+ * Implementation of hook_update_N().
+ */
+function yamm_server_update_6011() {
+  $ret = array();
+  // FIXME: Port data.
+  db_drop_table($ret, 'yamm_server_profile');
+  db_create_table($ret, 'yamm_server_profile', drupal_get_schema_unprocessed('yamm_server', 'yamm_server_profile'));
   return $ret;
 }

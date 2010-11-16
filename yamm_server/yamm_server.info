@@ -2,6 +2,8 @@
 name = Yamm server
 description = Yet Another Migration Module server and UI
 package = Yamm
+dependencies[] = oox
+dependencies[] = xoxo
 dependencies[] = yamm_api
 dependencies[] = views
 core = 6.x

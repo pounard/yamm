@@ -2,18 +2,13 @@
 // $Id: View.php,v 1.1 2010/03/24 00:45:43 pounard Exp $
 
 /**
- * @file
- * Node entity for Yamm
- */
-
-/**
  * Simple Yamm_Entity node implementation
  */
 class Yamm_Entity_View extends Yamm_Entity {
 
   /**
    * (non-PHPdoc)
-   * @see www/sites/all/modules/custom/yamm/yamm_api/Entity#_objectLoad($identifier)
+   * @see Yamm_Entity::_objectLoad()
    */
   protected function _objectLoad($identifier) {
     views_include('view');
@@ -22,7 +17,7 @@ class Yamm_Entity_View extends Yamm_Entity {
 
   /**
    * (non-PHPdoc)
-   * @see www/sites/all/modules/custom/yamm/yamm_api/Entity#_constructDependencies($object)
+   * @see Yamm_Entity::_constructDependencies()
    */
   protected function _constructDependencies($object) {
     // TODO For later use, maybe modules enable should be a good thing?
@@ -31,7 +26,7 @@ class Yamm_Entity_View extends Yamm_Entity {
 
   /**
    * (non-PHPdoc)
-   * @see www/sites/all/modules/custom/yamm/yamm_api/Entity#_save($object)
+   * @see Yamm_Entity::_save()
    */
   protected function _save($object) {
     // TODO we should check for all dependencies which are not data, such as
@@ -49,7 +44,7 @@ class Yamm_Entity_View extends Yamm_Entity {
 
   /**
    * (non-PHPdoc)
-   * @see www/sites/all/modules/custom/yamm/yamm_api/Entity#_update($object, $identifier)
+   * @see Yamm_Entity::_update()
    */
   protected function _update($object, $identifier) {
     // TODO we should check for all dependencies which are not data, such as

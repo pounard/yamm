@@ -2,11 +2,6 @@
 // $Id: Node.php,v 1.2 2010/05/12 15:38:43 pounard Exp $
 
 /**
- * @file
- * Node entity for Yamm
- */
-
-/**
  * Simple Yamm_Entity node implementation
  */
 class Yamm_Entity_Node extends Yamm_Entity

@@ -65,9 +65,7 @@ function yamm_server_network_hello($client) {
 function yamm_server_network_push($client, $method, $manual = FALSE) {
   global $base_url;
 
-  yamm_server_bootstrap_sync();
-
-  $tid = yamm_server_transaction_create($client, SyncProfile::getDefaultProfile(), YAMM_TRANSACTION_STATUS_WAITING, $manual);
+  $tid = yamm_server_transaction_create($client, xoxo_factory_get('yamm_sync_profile')->getDefaultProfile(), YAMM_TRANSACTION_STATUS_WAITING, $manual);
   $result = _yamm_server_client_xmlrpc($client, 'yamm.push', $base_url, $tid, $method);
 
   if ($result === FALSE) {
@@ -86,4 +84,95 @@ function yamm_server_network_push($client, $method, $manual = FALSE) {
   }
 
   return $status;
+}
+
+/**
+ * Pull content implementation
+ */
+function _yamm_server_client_pull_cb($tid) {
+  try {
+    $ret = array();
+
+    yamm_api_bootstrap_entity();
+
+    // Hard coded limit, this will change.
+    $limit = 300;
+    $transaction = yamm_server_transaction_load($tid);
+    $profile = xoxo_factory_get('yamm_sync_profile')->loadByName($transaction->profile);
+
+    // Create empty context at first pull.
+    if (empty($transaction->state)) {
+      $transaction->state = array('offset' => 0, 'finished' => array());
+    }
+
+    // Fetch back profile backend.
+    $backend = $profile->getBackend();
+
+    // First hit, get the first phase.
+    if (!isset($transaction->state['phases'])) {
+      $transaction->state['phases'] = $backend->getPhases();
+      $transaction->state['phase'] = array_shift($transaction->state['phases']);
+    }
+
+    // Fetch our entities.
+    $entities = $backend->getEntities($limit, $transaction->state['offset'], $transaction->state['phase']);
+
+    // An empty array means the phase is finished.
+    if (empty($entities)) {
+      if (empty($transaction->state['phases'])) {
+        $transaction->state['offset'] = 0;
+      }
+      else {
+        $transaction->state['phase'] = array_shift($transaction->state['phases']);
+      }
+    }
+    // Treat entities and increment offset.
+    else {
+      foreach ($entities as $entity) {
+        if ($settings = $profile->getSettingsForType($entity->getType())) {
+          $entity->setSettings($settings);
+        }
+        $ret[] = Yamm_Entity::serialize($entity);
+      }
+      $transaction->state['offset'] += $limit;
+    }
+
+    yamm_server_transaction_update_state($transaction);
+    return $ret;
+  }
+  catch (Yamm_Sync_ProfileException $e) {
+    watchdog('yamm_pull', '@e', array('@e' => $e->getMessage()), WATCHDOG_ERROR);
+  }
+
+  // Whatever happens, if we get here, we had an unrecoverable error, return
+  // FALSE to notify client something wrong happened.
+  return FALSE;
+}
+
+/**
+ * Pull dependencies implementation
+ */
+function _yamm_server_client_pull_dependencies($tid, $uuid_array) {
+  $ret = array();
+
+  yamm_api_bootstrap_entity();
+
+  $transaction = yamm_server_transaction_load($tid);
+  $profile = xoxo_factory_get('yamm_sync_profile')->loadByName($transaction->profile);
+
+  foreach ($uuid_array as $uuid) {
+    try {
+      $entity = Yamm_Entity::loadByUuid($uuid);
+      if ($settings = $profile->getSettingsForType($entity->getType())) {
+        $entity->setSettings($settings);
+      }
+      $ret[] = Yamm_Entity::serialize($entity);
+    }
+    catch (Yamm_EntityException $e) {
+      // We could not construct this entity, but treat the other.
+      watchdog('yamm_pull', '@e',  array('@e' => $e->getMessage()), WATCHDOG_DEBUG);
+    }
+  }
+
+  return $ret;
 }

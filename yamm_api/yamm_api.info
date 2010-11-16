@@ -2,6 +2,7 @@
 name = Yamm API
 description = Yet Another Migration Module common API
 package = Yamm
+dependencies[) = oox
 dependencies[] = node
 dependencies[] = user
 dependencies[] = taxonomy

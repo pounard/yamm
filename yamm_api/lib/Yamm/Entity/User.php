@@ -2,11 +2,6 @@
 // $Id: User.php,v 1.1 2010/03/24 00:45:43 pounard Exp $
 
 /**
- * @file
- * User entity for Yamm
- */
-
-/**
  * Simple user Yamm_EntitySettingsAbstract implementation
  */
 class Yamm_Entity_UserSettings extends Yamm_EntitySettingsAbstract {
@@ -18,7 +13,7 @@ class Yamm_Entity_UserSettings extends Yamm_EntitySettingsAbstract {
 
   /**
    * (non-PHPdoc)
-   * @see www/sites/all/modules/custom/yamm/yamm_api/Yamm_EntitySettingsAbstract#settingsForm()
+   * @see IFormable::form()
    */
   public function form() {
     $form = array();
@@ -34,33 +29,33 @@ class Yamm_Entity_UserSettings extends Yamm_EntitySettingsAbstract {
       '#title' => t('Duplicates handling'),
       '#options' => $options,
       '#description' => t('Define what behavior the the entity should adopt when username conflicts with an already existing one.'),
-      '#default_value' => $this->get('duplicate_behavior', Yamm_Entity_UserSettings::DUPLICATE_IGNORE));
+      '#default_value' => $this->getOption('duplicate_behavior', Yamm_Entity_UserSettings::DUPLICATE_IGNORE));
 
     $form['admin_override'] = array(
       '#type' => 'radios',
       '#title' => t('Admin override'),
       '#options' => $options,
       '#description' => t('Define what behavior the the entity should for site administrator.'),
-      '#default_value' => $this->get('admin_override', Yamm_Entity_UserSettings::DUPLICATE_IGNORE));
+      '#default_value' => $this->getOption('admin_override', Yamm_Entity_UserSettings::DUPLICATE_IGNORE));
 
     return $form;
   }
 
   /**
    * (non-PHPdoc)
-   * @see www/sites/all/modules/custom/yamm/yamm_api/Yamm_EntitySettingsAbstract#formValidate()
+   * @see IFormable::formValidate()
    */
-  public function formValidate($values) {
+  public function formValidate(&$values) {
     // Nothing to validate
   }
 
   /**
    * (non-PHPdoc)
-   * @see www/sites/all/modules/custom/yamm/yamm_api/Yamm_EntitySettingsAbstract#formSubmit($values)
+   * @see IFormable::formSubmit()
    */
-  public function formSubmit($values) {
-    $this->set('duplicate_behavior', (int) $values['duplicate_behavior']);
-    $this->set('admin_override', (int) $values['admin_override']);
+  public function formSubmit(&$values) {
+    $this->setOption('duplicate_behavior', (int) $values['duplicate_behavior']);
+    $this->setOption('admin_override', (int) $values['admin_override']);
   }
 }
 
@@ -120,10 +115,10 @@ class Yamm_Entity_User extends Yamm_Entity {
     $settings = $this->getSettings();
 
     if ($uid == 1) {
-      $behavior = $settings->get('admin_override', Yamm_Entity_UserSettings::DUPLICATE_IGNORE);
+      $behavior = $settings->getOption('admin_override', Yamm_Entity_UserSettings::DUPLICATE_IGNORE);
     }
     else {
-      $behavior = $settings->get('duplicate_behavior', Yamm_Entity_UserSettings::DUPLICATE_IGNORE);
+      $behavior = $settings->getOption('duplicate_behavior', Yamm_Entity_UserSettings::DUPLICATE_IGNORE);
     }
 
     switch ($behavior) {

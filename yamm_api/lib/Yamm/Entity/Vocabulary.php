@@ -2,11 +2,6 @@
 // $Id: Vocabulary.php,v 1.1 2010/03/24 00:45:43 pounard Exp $
 
 /**
- * @file
- * Vocabulary entity for Yamm
- */
-
-/**
  * Vocabulary entity settings implementation.
  */
 class Yamm_Entity_VocabularySettings extends Yamm_EntitySettingsAbstract
@@ -16,7 +11,7 @@ class Yamm_Entity_VocabularySettings extends Yamm_EntitySettingsAbstract
 
   /**
    * (non-PHPdoc)
-   * @see Yamm_EntitySettingsAbstract::settingsForm()
+   * @see IFormable::form()
    */
   public function form() {
     $form = array();
@@ -31,7 +26,7 @@ class Yamm_Entity_VocabularySettings extends Yamm_EntitySettingsAbstract
       '#title' => t('Duplicates handling'),
       '#options' => $options,
       '#description' => t('Define what behavior the the entity should adopt when vocabulary name conflicts with an existing one. Beware, if more than one duplicate is found, the algorithm won\'t merge but will create a new one instead.'),
-      '#default_value' => $this->get('duplicate_behavior', Yamm_Entity_VocabularySettings::DUPLICATE_IGNORE),
+      '#default_value' => $this->getOption('duplicate_behavior', Yamm_Entity_VocabularySettings::DUPLICATE_IGNORE),
     );
 
     return $form;
@@ -39,18 +34,18 @@ class Yamm_Entity_VocabularySettings extends Yamm_EntitySettingsAbstract
 
   /**
    * (non-PHPdoc)
-   * @see Yamm_EntitySettingsAbstract::formValidate()
+   * @see IFormable::formValidate()
    */
-  public function formValidate($values) {
+  public function formValidate(&$values) {
     // Nothing to validate
   }
 
   /**
    * (non-PHPdoc)
-   * @see Yamm_EntitySettingsAbstract::formSubmit()
+   * @see IFormable::formSubmit()
    */
-  public function formSubmit($values) {
-    $this->set('duplicate_behavior', (int) $values['duplicate_behavior']);
+  public function formSubmit(&$values) {
+    $this->setOption('duplicate_behavior', (int) $values['duplicate_behavior']);
   }
 }
 
@@ -82,7 +77,7 @@ class Yamm_Entity_Vocabulary extends Yamm_Entity
   protected function _save($vocabulary) {
     $edit = (array) $vocabulary;
     unset($edit['vid']);
-    if ($this->getSettings()->get('merge_duplicates', FALSE)) {
+    if ($this->getSettings()->getOption('merge_duplicates', FALSE)) {
       $this->__mergeWithExisting($edit);
     }
     taxonomy_save_vocabulary($edit);

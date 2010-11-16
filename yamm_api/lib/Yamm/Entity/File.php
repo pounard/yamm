@@ -22,7 +22,7 @@ class Yamm_Entity_FileSettings extends Yamm_EntitySettingsAbstract
    * (non-PHPdoc)
    * @see Yamm_EntitySettingsAbstract::formValidate()
    */
-  public function formValidate($values) {
+  public function formValidate(&$values) {
     // Nothing to validate
   }
 
@@ -30,7 +30,7 @@ class Yamm_Entity_FileSettings extends Yamm_EntitySettingsAbstract
    * (non-PHPdoc)
    * @see Yamm_EntitySettingsAbstract::formSubmit()
    */
-  public function formSubmit($values) {
+  public function formSubmit(&$values) {
 //    $this->set('contentRevision', (bool) $values['contentRevision']);
 //    $this->set('contentBehavior', (int) $values['contentBehavior']);
   }

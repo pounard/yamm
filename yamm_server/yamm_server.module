@@ -9,16 +9,15 @@
 define('YAMM_STATUS_ACTIVATE', 1);
 define('YAMM_STATUS_SUSPEND',  2);
 
+define('YAMM_SYNC_DEFAULT_LIMIT', 300);
+
 /**
  * Implementation of hook_menu().
  */
 function yamm_server_menu() {
   $items = array();
 
-  /*
-   * CRUD operations on clients
-   */
-
+  // CRUD operations on clients.
   $items['admin/yamm/client'] = array(
     'title'            => 'Clients list',
     'description'      => 'Manage, add, delete, change status of clients',
@@ -65,11 +64,7 @@ function yamm_server_menu() {
     'type'             => MENU_LOCAL_TASK,
   );
 
-  /*
-   * CRUD operations on profiles
-   */
-
-  
+  // CRUD operations on profiles.
   $items['admin/yamm/profile'] = array(
     'title'            => 'Profiles overview',
     'description'      => 'Manage, add, delete profiles',
@@ -77,8 +72,7 @@ function yamm_server_menu() {
     'page arguments'   => array('yamm_server_profile_overview'),
     'access arguments' => array('administer sync server'),
     'file'             => 'yamm_server.admin.inc',
-  );
-  
+  );  
   $items['admin/yamm/profile/add'] = array(
     'title'            => 'Create profile',
     'page callback'    => 'drupal_get_form',
@@ -87,7 +81,6 @@ function yamm_server_menu() {
     'file'             => 'yamm_server.admin.inc',
     'type'             => MENU_CALLBACK,
   );
-  
   $items['admin/yamm/profile/edit/%yamm_server_profile'] = array(
     'title'            => 'Edit profile',
     'page callback'    => 'drupal_get_form',
@@ -96,7 +89,6 @@ function yamm_server_menu() {
     'file'             => 'yamm_server.admin.inc',
     'type'             => MENU_CALLBACK,
   );
-  
   $items['admin/yamm/profile/delete/%'] = array(
     'title'            => t('Delete profile'),
     'description'      => t('Delete a profile'),
@@ -106,13 +98,11 @@ function yamm_server_menu() {
     'type'             => MENU_CALLBACK,
     'file'             => 'yamm_server.admin.inc',
   );
-  
   $items['admin/yamm/profile/edit/%yamm_server_profile/form'] = array(
     'title'  => t('Properties'),
     'type'   => MENU_DEFAULT_LOCAL_TASK,
     'weight' => 1,
   );
-  
   $items['admin/yamm/profile/edit/%yamm_server_profile/settings'] = array(
     'title'            => 'Entities settings',
     'page callback'    => 'drupal_get_form',
@@ -131,39 +121,94 @@ function yamm_server_menu() {
  */
 function yamm_server_theme() {
   $items = array();
-
+  $file = 'theme.inc';
+  $path = drupal_get_path('module', 'yamm_server');
   // Admin forms
   $items['yamm_server_client_overview'] = array(
     'arguments' => array('client' => NULL),
-    'file'      => 'yamm_server.theme',
+    'file' => 'yamm_server.admin.inc',
   );
   $items['yamm_server_profile_overview'] = array(
-    'file' => 'yamm_server.theme',
+    'file' => 'yamm_server.admin.inc',
   );
   $items['yamm_server_client_operations_form'] = array(
     'arguments' => array('form' => array()),
-    'file'      => 'yamm_server.theme',
+    'file' => 'yamm_server.admin.inc',
   );
   $items['yamm_server_client_list'] = array(
     'arguments' => array('form' => array()),
-    'file'      => 'yamm_server.theme',
+    'file' => 'yamm_server.admin.inc',
   );
   $items['yamm_server_client_operations'] = array(
     'arguments' => array('client' => NULL),
-    'file'      => 'yamm_server.theme',
+    'file' => 'yamm_server.admin.inc',
   );
-
   // Client information
   $items['yamm_server_status'] = array(
     'arguments' => array('status' => 0),
-    'file'      => 'yamm_server.theme',
+    'file' => $file,
+    'path' => $path,
   );
-
   // UI stuff
   $items['yamm_server_page_back'] = array(
-    'file' => 'yamm_server.theme',
+    'file' => $file,
+    'path' => $path,
   );
+  return $items;
+}
 
+/**
+ * Implementation of hook_oox_registry().
+ */
+function yamm_server_oox_registry() {
+  $items = array();
+  $items['yamm_sync_backend'] = array(
+    'name' => "Yamm synchronization backend",
+    'hook' => 'yamm_sync_backend',
+  );
+  return $items;
+}
+
+/**
+ * Implementation of hook_xoxo_factory().
+ */
+function yamm_server_xoxo_factory() {
+  $items = array();
+  $items['yamm_sync_profile'] = array(
+    'name' => "Yamm synchronization profile",
+    'class' => 'Yamm_Sync_ProfileFactory',
+    'table' => 'yamm_server_profile',
+    'target' => 'Yamm_Sync_Profile',
+    'administrable' => TRUE,
+  );
+  return $items;
+}
+
+/**
+ * Implementation of hook_oox_api().
+ */
+function yamm_server_oox_api() {
+  return array(
+    'Yamm_Sync_ProfileException' => 'lib/Yamm/Sync/Profile.php',
+    'Yamm_Sync_Profile' => 'lib/Yamm/Sync/Profile.php',
+    'Yamm_Sync_ProfileFactory' => 'lib/Yamm/Sync/ProfileFactory.php',
+    'Yamm_Sync_BackendInterface' => 'lib/Yamm/Sync/Backend/Interface.php',
+    'Yamm_Sync_BackendAbstract' => 'lib/Yamm/Sync/Backend/Interface.php',
+    'Yamm_Sync_Backend_Views' => 'lib/Yamm/Sync/Backend/Views.php',
+  );
+}
+
+/**
+ * Implementation of hook_yamm_sync_backend().
+ */
+function yamm_server_yamm_sync_backend() {
+  $items = array();
+  if (module_exists('views')) {
+    $items['views'] = array(
+      'name' => "Views backend",
+      'class' => 'Yamm_Sync_Backend_Views',
+    );
+  }
   return $items;
 }
 
@@ -171,43 +216,32 @@ function yamm_server_theme() {
  * Implementation of hook_xmlrpc().
  */
 function yamm_server_xmlrpc() {
-  return array(
-    array(
-      'yamm.client.status',
-      'yamm_server_client_status_cb',
-      array(
-        'boolean', 
-        'string', 
-        'int'
-      ),
-      t('Client pulls'),
-    ),
-    array(
-      'yamm.client.pull',
-      'yamm_server_client_pull_cb',
-      array(
-        'struct', 
-        'string'
-      ),
-      t('Client pulls'),
-    ),
-    array(
-      'yamm.client.pull.dependencies',
-      'yamm_server_client_pull_dependencies_cb',
-      array(
-        'struct', 
-        'string', 
-        'array'
-      ),
-      t('Client pulls dependencies'),
-    ),
+  $items = array();
+  $items[] = array(
+    'yamm.client.status',
+    'yamm_server_client_status_cb',
+    array('boolean', 'string', 'int'),
+    t('Client pulls'),
   );
+  $items[] = array(
+    'yamm.client.pull',
+    'yamm_server_client_pull_cb',
+    array('struct', 'string'),
+    t('Client pulls'),
+  );
+  $items[] = array(
+    'yamm.client.pull.dependencies',
+    'yamm_server_client_pull_dependencies_cb',
+    array('struct', 'string', 'array'),
+    t('Client pulls dependencies'),
+  );
+  return $items;
 }
 
 /**
  * Implementation of hook_hook_info().
  * 
- * Integrates Yamm with Trigger module
+ * Integrates Yamm with Trigger module.
  */
 function yamm_server_hook_info() {
   return array(
@@ -225,27 +259,20 @@ function yamm_server_hook_info() {
 }
 
 /**
- * Implementation of hook_nodeapi
- * @param $node
- * @param $op
- * @param $a3
- * @param $a4
- * @return unknown_type
+ * Implementation of hook_nodeapi().
  */
 function yamm_server_nodeapi(&$node, $op, $a3 = NULL, $a4 = NULL) {
-  
   switch ($op) {
     // Delete UUID element if exists
     case 'delete':
       // Getting UUID
       $uuid = yamm_api_uuid_get('node', $node->nid);
-      
+
       // Check if element exists
       if ($uuid) {
         // Delete it from database
         yamm_api_uuid_delete($uuid);
       }
-      
       break;
   }
 }
@@ -253,16 +280,18 @@ function yamm_server_nodeapi(&$node, $op, $a3 = NULL, $a4 = NULL) {
 /**
  * Implementation of hook_yamm_server().
  * 
- * Integrates Yamm with Trigger module
+ * Integrates Yamm with Trigger module.
  */
 function yamm_server_yamm_server($op, $tid) {
   switch ($op) {
     case 'incoming_pull_ok':
     case 'incoming_pull_error':
       break;
+
     default:
       return;
   }
+
   if (module_exists('trigger')) {
     $aids = _trigger_get_hook_aids('onthisdate', $op);
     $context = array('hook' => 'yamm_server', 'op' => $op, 'tid' => $tid);
@@ -345,6 +374,7 @@ function yamm_server_get_clients($limit = 0, $element = 0, $order = 'name', $sor
     case 'method':
       $order = 'method ' . $sort . ', name ' .$sort;
       break;
+
     case 'name':
     default:
       $order = 'name ' . $sort;
@@ -372,14 +402,15 @@ function yamm_server_get_clients($limit = 0, $element = 0, $order = 'name', $sor
  * Create a new transaction
  *
  * @param object $client
- *   Client for which to create transaction
- * @param SyncProfile|string $profile
- *   SyncProfile object or profile internal name
- *   Can also be NULL
+ *   Client for which to create transaction.
+ * @param Yamm_Sync_Profile|string $profile
+ *   Yamm_Sync_Profile object or profile internal name.
+ *   Can also be NULL.
  * @param int $status = YAMM_TRANSACTION_STATUS_WAITING
- *   Default transactions should always be in waiting status
+ *   Default transactions should always be in waiting status.
  * @param boolean $manual = FALSE
- *   Set to TRUE for manually launched synchronization order
+ *   Set to TRUE for manually launched synchronization order.
+ * 
  * @return string
  *   Transaction status id
  */
@@ -388,7 +419,7 @@ function yamm_server_transaction_create($client, $profile, $status = YAMM_TRANSA
   $tid = md5($time . uniqid());
 
   // Check profile
-  if ($profile instanceof SyncProfile) {
+  if ($profile instanceof Yamm_Sync_Profile) {
     $profile_name = $profile->getInternalName();
   }
   else if (is_string($profile)) {
@@ -409,20 +440,22 @@ function yamm_server_transaction_create($client, $profile, $status = YAMM_TRANSA
  * Load full transaction object
  *
  * @param string $tid
+ * 
  * @return object
- *   Transaction row from database
+ *   Transaction row from database.
  */
 function yamm_server_transaction_load($tid) {
   $transaction = db_fetch_object(db_query("SELECT * FROM {yamm_server_transaction} WHERE tid = '%s'", $tid));
-  
+
   if ($transaction && ! empty($transaction->state)) {
     $transaction->state = unserialize(db_decode_blob($transaction->state));
   }
+
   return $transaction;
 }
 
 /**
- * Update transaction
+ * Update transaction.
  *
  * @param object $transaction
  */
@@ -432,21 +465,21 @@ function yamm_server_transaction_update_state($transaction) {
   $transaction->updated = time();
   drupal_write_record('yamm_server_transaction', $edit, 'tid');
   db_query("UPDATE {yamm_server_transaction} SET state = %b WHERE tid = '%s'", array(
-      serialize($transaction->state), 
-      $transaction->tid
-    )
-  );
+    serialize($transaction->state), 
+    $transaction->tid,
+  ));
 }
 
 /**
- * Get a transaction status
+ * Get a transaction status.
  *
  * @param string $tid
  * @param object $client = NULL
- *   If given, restreint select to client name
+ *   If given, restreint select to client name.
+ * 
  * @return int
- *   Transaction status constant
- *   NULL if transaction not found
+ *   Transaction status constant.
+ *   NULL if transaction not found.
  */
 function yamm_server_transaction_get_status($tid, $client = NULL) {
   $transaction = yamm_server_transaction_load($tid);
@@ -460,12 +493,13 @@ function yamm_server_transaction_get_status($tid, $client = NULL) {
 }
 
 /**
- * Get client linked to a transaction
+ * Get client linked to a transaction.
  *
  * @param string $tid
- *   Transaction id
+ *   Transaction id.
+ * 
  * @return object
- *   Client instance
+ *   Client instance.
  */
 function yamm_server_transaction_get_client($tid) {
   return yamm_server_client_load(db_result(db_query("SELECT client FROM {yamm_server_transaction} WHERE tid = '%s'")));
@@ -476,32 +510,29 @@ function yamm_server_transaction_get_client($tid) {
  *
  * @param string $tid
  *   Transaction identifier.
- * 
  * @param $last_update = NULL
  *   Last client update timestamp, if given.
  */
 function yamm_server_transaction_update_status($tid, $status, $last_update = NULL) {
   if ($last_update) {
-    db_query("UPDATE {yamm_server_transaction} SET status = %d, updated = %d, last_update = %d WHERE tid = %d", array(
-        $status, 
-        time(),
-        $last_update, 
-        $tid
-       )
-     );
+    db_query("UPDATE {yamm_server_transaction} SET status = %d, updated = %d, last_update = %d WHERE tid = '%s'", array(
+      $status, 
+      time(),
+      $last_update, 
+      $tid,
+    ));
   }
   else {
-    db_query("UPDATE {yamm_server_transaction} SET status = %d, updated = %d WHERE tid = %d", array(
-        $status, 
-        time(), 
-        $tid
-       )
-     );
+    db_query("UPDATE {yamm_server_transaction} SET status = %d, updated = %d WHERE tid = '%s'", array(
+      $status, 
+      time(), 
+      $tid,
+    ));
   }
 }
 
 /**
- * Mark all too old transaction as timeouted
+ * Mark all too old transaction as timeouted.
  */
 function yamm_server_transaction_purge() {
   // TODO
@@ -515,9 +546,10 @@ function yamm_server_transaction_purge() {
  * via watchdog.
  * 
  * @param string $tid
- *   Transaction id given by client
+ *   Transaction id given by client.
+ * 
  * @return boolean
- *   TRUE if valid, FALSE else
+ *   TRUE if valid, FALSE else.
  */
 function yamm_server_client_check_transaction($tid) {
 
@@ -542,11 +574,10 @@ function yamm_server_client_check_transaction($tid) {
   // of manual push order
   if (! $transaction->manual && $client->status != YAMM_STATUS_ACTIVATE) {
     watchdog('yamm_server', 'Client @name is suspended and transaction !tid is not in manual mode, aborting', array(
-        '@name' => $client->name, 
-        '!tid' => $tid
-      ), WATCHDOG_WARNING
-    );
-    
+      '@name' => $client->name, 
+      '!tid' => $tid,
+    ), WATCHDOG_WARNING);
+
     yamm_server_transaction_update_status($tid, YAMM_TRANSACTION_STATUS_DENIED);
     module_invoke_all('yamm_server', 'incoming_pull_error', $tid);
     
@@ -568,7 +599,7 @@ function yamm_server_client_check_transaction($tid) {
 }
 
 /**
- * Client set status xmlrpc callback
+ * Client set status xmlrpc callback.
  */
 function yamm_server_client_status_cb($tid, $status) {
   if (! yamm_server_client_check_transaction($tid)) {
@@ -580,7 +611,7 @@ function yamm_server_client_status_cb($tid, $status) {
 }
 
 /**
- * Client pull content from term xmlrpc callback
+ * Client pull content from term xmlrpc callback.
  */
 function yamm_server_client_pull_cb($tid) {
   if (! yamm_server_client_check_transaction($tid)) {
@@ -592,7 +623,7 @@ function yamm_server_client_pull_cb($tid) {
 }
 
 /**
- * Client pull dependencies xmlrpc callback
+ * Client pull dependencies xmlrpc callback.
  */
 function yamm_server_client_pull_dependencies_cb($tid, $uuid_array) {
   if (! yamm_server_client_check_transaction($tid)) {
@@ -604,26 +635,13 @@ function yamm_server_client_pull_dependencies_cb($tid, $uuid_array) {
 }
 
 /**
- * Bootstrap profile subsystem
- */
-function yamm_server_bootstrap_sync() {
-  static $loaded = FALSE;
-  if (! $loaded) {
-    yamm_api_bootstrap_entity();
-    module_load_include('inc', 'yamm_server', 'sync_profile');
-    $loaded = TRUE;
-  }
-}
-
-/**
- * Menu callback wrapper
+ * Menu callback wrapper.
  */
 function yamm_server_profile_load($profile) {
-  yamm_server_bootstrap_sync();
   try {
-    return SyncProfile::load($profile);
+    return Yamm_Sync_Profile::load($profile);
   }
-  catch (SyncProfileException $e) {
-    // Silent errors
+  catch (Yamm_Sync_ProfileException $e) {
+    // Silent errors.
   }
 }

@@ -41,102 +41,23 @@ class Yamm_Entity_DeletedOnClientException extends Yamm_EntityException {}
 
 /**
  * Store server entities configuration.
+ * 
+ * The Options class gives us the IRegistrable and IOptionnable interfaces
+ * implementation, which is fully compatible with what we want here.
+ * 
+ * Registrable interface will allow us to use the type property standing for
+ * entity type, the optionable interface will carry the data we need. 
  */
-abstract class Yamm_EntitySettingsAbstract {
-
+abstract class Yamm_EntitySettingsAbstract extends Options implements IFormable
+{
   public function __construct() {
     $this->__setTypeFromClass();
   }
 
   private function __setTypeFromClass() {
     preg_match('/^Entity([a-zA-Z0-9]+)Settings$/', get_class($this), $matches);
-    $this->__type = strtolower($matches[1]);
+    $this->_type = strtolower($matches[1]);
   }
-
-  /**
-   * Object type.
-   * 
-   * @var string
-   */
-  private $__type = 'void';
-
-  /**
-   * Get type.
-   * 
-   * @return string
-   */
-  public function getType() {
-    return $this->__type;
-  }
-
-  /**
-   * Variable cache.
-   * 
-   * @var array
-   */
-  private $__variables = array();
-
-  /**
-   * Save or update a variable.
-   *
-   * @param string $name
-   * @param mixed $value
-   * 
-   * @return void
-   */
-  public function set($name, $value) {
-    $this->__variables[$name] = $value;
-  }
-
-  /**
-   * Get a variable.
-   *
-   * @param string $name
-   * @param mixed $default
-   *   Default value returned if variable not found.
-   * 
-   * @return mixed
-   *   Variable value.
-   */
-  public function get($name, $default) {
-    return isset($this->__variables[$name]) ? $this->__variables[$name] : $default;
-  }
-
-  /**
-   * This is a normal form handler, construct your subform here. This settings
-   * will be encapsuled into a global form, in with #tree to TRUE, so don't
-   * forget it when you'll validate and submit your settings.
-   *
-   * @return array
-   *   Sub form (drupal form)
-   */
-  public abstract function form();
-
-  /**
-   * Validate your settings.
-   *
-   * @param array $values
-   *   Values corresponding to form elements you gave into the settingsForm()
-   *   method. Remember that #tree is set to TRUE.
-   * 
-   * @return array
-   *   Array of localized errors. Keys are field name, values are localized
-   *   error string. Return an empty array if no error happened.
-   */
-  public abstract function formValidate($values);
-
-  /**
-   * Submit your settings.
-   *
-   * Here you can user set() method to set new variables into this object.
-   * The object will be saved by the system and restored when parsing the
-   * entities at pull time.
-   *
-   * @param array $values
-   *   Values corresponding to form elements you gave into the settingsForm()
-   *   method. Remember that #tree is set to TRUE.
-   */
-  public abstract function formSubmit($values);
 }
 
 /**

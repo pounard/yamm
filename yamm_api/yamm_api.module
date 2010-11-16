@@ -7,7 +7,7 @@
  */
 
 /*
- * Client <-> server transaction status constants
+ * Client <-> server transaction status constants.
  *
  * The only success flag is WAITING or FINISHED in case of client response.
  * All others are failures.
@@ -26,7 +26,7 @@ define('YAMM_TRANSACTION_STATUS_OUTDATED', 9); // Client does not respond the ri
 
 define('YAMM_METHOD_SYNC', 'yamm_method_sync');
 
-// Variable: debug mode (set to TRUE or FALSE)
+// Variable: debug mode (set to TRUE or FALSE).
 define('YAMM_OPT_DEBUG', 'yamm_opt_debug');
 
 /**
@@ -137,12 +137,8 @@ function yamm_api_get_entities() {
   static $entities_definition;
 
   if (empty($entities_definition)) {
-    $data = cache_get('entities', 'cache_yamm');
-    $entities_definition = $data->data;
-
     // Build cache
-    if (empty($entities_definition)) {
-
+    if (!$cached = cache_get('entities', 'cache_yamm')) {
       // Check for conflicts
       $base_tables = array();
       $types = array();
@@ -197,6 +193,9 @@ function yamm_api_get_entities() {
       }
 
       cache_set('entities', $entities_definition, 'cache_yamm', CACHE_PERMANENT);
+    }
+    else {
+      $entities_definition = $cached->data;
     }
   }
 
@@ -394,7 +393,8 @@ function _yamm_api_uuid_enabled() {
 
     // Attempt to load extension.
     if (!$loaded = extension_loaded('uuid')) {
-      $loaded = dl('uuid');
+      // FIXME: Not supported on multithreaded servers.
+      // $loaded = dl('uuid');
     }
 
     // Check extension version.

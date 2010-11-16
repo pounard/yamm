@@ -7,424 +7,72 @@
  */
 
 /**
- * Multistep handling for profile overview
+ * Profile overview page.
  */
-function yamm_server_profile_overview($form_state) {
-  if (! empty($form_state) && isset($form_state['op']) && ! empty($form_state['profiles'])) {
-    // Multistep
-    return _yamm_server_profile_overview_confirm($form_state);
-  }
-  else {
-    return _yamm_server_profile_overview();
-  }
-}
-
-/**
- * Profile overview page
- */
-function _yamm_server_profile_overview() {
-  yamm_server_bootstrap_sync();
-
-  $form = array();
-  $form['#tree'] = TRUE;
-
-  $form['options'] = array(
-    '#type'        => 'fieldset',
-    '#title'       => t('Operations'),
-    '#collapsible' => FALSE,
-  );
-  $form['options']['op'] = array(
-    '#type'          => 'select',
-    '#default_value' => 'default',
-    '#options'       => array(
-      'default' => t('Set selected as default'),
-      'delete'  => t('Delete selected'),
-    ),    
-  );
-  $form['options']['submit'] = array(
-    '#type'   => 'submit',
-    '#value'  => t('Update'),
-    '#submit' => array('yamm_server_profile_overview_update'),
+function yamm_server_profile_overview() {
+  $form = array(
+    '#tree' => TRUE,
+    '#theme' => 'yamm_server_profile_overview',
   );
 
   $form['profiles'] = array();
-
-  $headers = array(
-    array('data' => t('Default')),
-    array('data' => t('Profile')),
-    array('data' => t('Name')),
-  );
-
   $element = 0;
-  $profiles = SyncProfile::getList(10, $element);
-
-  array_unshift($headers, theme('table_select_header_cell'));
-  $form['profiles']['header'] = array('#type' => 'value', '#value' => &$headers);
-
-  $checkboxes = array();
+  $factory = xoxo_factory_get('yamm_sync_profile');
+  $profiles = $factory->loadAll(10, TRUE, $element);
   $radios = array();
 
   // Display all known profile
-  foreach ($profiles as $profile => $name) {
-    $checkboxes[$profile] = '';
-    $radios[$profile]     = '';
-    
-    $form['profiles']['profile'][$profile] = array('#value' => l($profile, "admin/yamm/profile/edit/{$profile}"));
-    $form['profiles']['name'][$profile]    = array('#value' => check_plain($name));
-  }
-
-  $form['profiles']['checkboxes'] = array('#type' => 'checkboxes', '#options' => isset($checkboxes) ? $checkboxes : array());
-  $form['profiles']['radios']     = array('#type' => 'radios', '#options' => isset($radios) ? $radios : array(), '#default_value' => SyncProfile::getDefaultProfile());
-  
-  $form['#theme'] = 'yamm_server_profile_overview';
-  $form['footer'] = array('#type' => 'markup', '#value' => theme('pager', $element));
-  
-  // Adding the add profile button
-  $form['profile_add'] = array(
-    '#type'   => "submit",
-    '#value'  => t("Add a new profile"),
-    '#submit' => array('_yamm_server_profile_create_submit'),
-  );
-
-  return $form;
-}
-
-/**
- * Handler submit to create profile
- * @param $form
- * @param $form_state
- * @return unknown_type
- */
-function _yamm_server_profile_create_submit($form, &$form_state) {
-  $form_state['redirect'] = "admin/yamm/profile/add";
-}
-
-/**
- * Multistep confirm callback for profile overview
- */
-function _yamm_server_profile_overview_confirm($form_state) {
-  $form = array();
-
-  $form['profiles'] = array(
-    '#type'  => 'value',
-    '#value' => serialize($form_state['profiles']),
-  );
-
-  switch ($form_state['op']) {
-    case 'delete':
-      $question    = t('Are you sure you want to delete these profiles?');
-      $description = t('They will be definitely removed. You won\'t be able to restore them.');
-      $submit      = '_yamm_server_profile_list_remove_submit';
-      break;
-  }
-
-  $form = confirm_form($form, $question, ($form_state['redirect'] ? $form_state['redirect'] : $_GET['q']), $description);
-  $form['#submit'][] = $submit;
-
-  return $form;
-}
-
-function _yamm_server_profile_list_remove_submit($form, &$form_state) {
-  yamm_server_bootstrap_sync();
-
-  $profiles = unserialize($form_state['values']['profiles']);
-
   foreach ($profiles as $profile) {
-    SyncProfile::delete($profile);
-    drupal_set_message(t('Profile !profile_name deleted.', array('!profile_name' => $profile)));
-  }
-}
-
-/**
- * Submit handler profile overview
- */
-function yamm_server_profile_overview_update($form, &$form_state) {
-  yamm_server_bootstrap_sync();
-  $op = $form_state['values']['options']['op'];
-
-  switch ($op) {
-    case 'default':
-      if (! empty($form_state['values']['profiles']['radios'])) {
-        drupal_set_message(t('Default profile updated.'));
-        SyncProfile::setDefaultProfile($form_state['values']['profiles']['radios']);
-      }
-      break;
-
-    case 'delete':
-      // Multistep handling
-      $form_state['rebuild']  = TRUE;
-      $form_state['op']       = $op;
-      $form_state['profiles'] = $form_state['values']['profiles']['checkboxes'];
-      break;
-
-    default:
-      drupal_set_message(t('Not implemented yet'));
-      break;
-  }
-}
-
-/**
- * Edit/create profile form
- */
-function yamm_server_profile($form_state, $profile = NULL) {
-  yamm_server_bootstrap_sync();
-
-  $form = array();
-
-  if (! $profile) {
-    $update = FALSE;
-  }
-  else {
-    drupal_set_title(t('Edit profile'));
-    $update = $profile->getInternalName();
+    $name = $profile->getName();
+    $description = $profile->getDescription();
+    $radios[$name] = '';
+    $form['profiles']['profile'][$name] = array('#value' => $description ? $description : $name);
   }
 
-  $form['update'] = array('#type' => 'value', '#value' => $update);
-
-  $form['name'] = array(
-    '#type'          => 'textfield',
-    '#title'         => t('Profile name'),
-    '#required'      => TRUE,
-    '#default_value' => ($profile instanceof SyncProfile ? $profile->getName() : '')
+  $form['profiles']['radios'] = array(
+    '#type' => 'radios',
+    '#options' => isset($radios) ? $radios : array(),
+    '#default_value' => $factory->getDefaultProfile()
   );
 
-  $form['internal_name'] = array(
-    '#type'          => 'textfield',
-    '#title'         => t('Internal name'),
-    '#required'      => TRUE,
-    '#default_value' => ($profile instanceof SyncProfile ? $profile->getInternalName() : ''),
-    '#description'   => t('Must contains only alphanumeric caracters or _')
-  );
-  
-  // Building views list
-  $base_table          = array();
-  $available_views     = array();
-  $selected_views      = array();
-  $views_list          = views_get_all_views();
-  $entities            = yamm_api_get_entities();
-  
-  foreach ($entities as $type => $value) {
-    // Getting all base table with entities
-    if (isset($value['base_table'])) {
-      $base_table[$value['base_table']] = $value['base_table'];
-    }
-  }
-  
-  foreach ($views_list as $name => $view) {
-    // Check if the view has a known base table for entities
-    if (in_array($view->base_table, $base_table)) {
-      $available_views[$view->name] = $view->name;
-      $default_views[$view->name] = 0;
-    }
-  }
-  
-  // Enable saved checkboxes
-  if ($profile instanceof SyncProfile) {
-    // Saved selected views
-    $selected_views = $profile->getViews();
-    
-    // Check all selected views
-    foreach ($selected_views as $view) {
-      //  Check if view has not been deleted 
-      if (key_exists($view->name, $default_views)) {
-        $default_views[$view->name] = $view->name;
-      }
-    }
-  }
+  $form['footer'] = array('#type' => 'markup', '#value' => theme('pager', $element));
 
-  $form['views'] = array(
-    '#type'          => 'checkboxes',
-    '#options'       => $available_views,
-    '#default_value' => $default_views,
-    '#title'         => t('Views that export content'),
-    '#description'   => t('Select views that export content'),
-    '#required'      => TRUE,
-    '#multiple'      => TRUE,
+  // Change default button.
+  $form['profile_change'] = array(
+    '#type' => "submit",
+    '#value' => t("Set selected as default"),
+    '#submit' => array('yamm_server_profile_overview_change_default'),
   );
-
-  $form['submit'] = array(
-    '#type'  => 'submit',
-    '#value' => $update ? t('Update') : t('Save')
+  // New profile link.
+  $form['profile_add'] = array(
+    '#type' => "markup",
+    '#value' => l(t("Add a new profile"), 'admin/objects/yamm_sync_profile/add', array('query' => array('destination' => $_GET['q']))),
   );
-  
-  if ($update) {
-    $form['delete-profile'] = array(
-      '#type'   => 'submit',
-      '#value'  => t('Delete profile'),
-      '#submit' => array("_yamm_profile_delete_profile_form_submit"),
-    );
-    
-    $form['cancel'] = array(
-      '#type'   => 'submit',
-      '#value'  => t('Back to list'),
-      '#submit' => array("_yamm_profile_back_form_submit"),
-    );
-  }
 
   return $form;
 }
 
-function yamm_server_profile_validate($form, &$form_state) {
-  // Check internal name
-  if (preg_match('/[^a-zA-Z0-9_]/', trim($form_state['values']['internal_name']))) {
-    form_set_error('internal_name', t('View name must be alphanumeric or underscores only.'));
-  }
-}
-
-function yamm_server_profile_submit($form, &$form_state) {
-  yamm_server_bootstrap_sync();
-
-  $internal = trim($form_state['values']['internal_name']);
-  $name = trim($form_state['values']['name']);
-
-  if ($form_state['values']['update']) {
-    $profile = SyncProfile::load($form_state['values']['update']);
-  }
-  else {
-    $profile = new SyncProfile();
-  }
-
-  $profile->setInternalName($internal);
-  $profile->setName($name);
-
-  $profile->purgeViews();
-  
-  foreach ($form_state['values']['views'] as $key => $view_name) {
-    if ($key == (string)$view_name) {
-      $profile->addView($view_name);
-    }  
-  }
-
-  $profile->save();
-
-  if ($form_state['values']['profiles']) {
-    drupal_set_message(t('Profile @profile updated', array('@profile' => check_plain($profile->getName()))));
-  }
-  else {
-    drupal_set_message(t('Profile @profile created', array('@profile' => check_plain($profile->getName()))));
-  }
-
-  $form_state['redirect'] = 'admin/yamm/profile';
-}
-
 /**
- * Handler to redirect on confirmation form
- * @param $form
- * @param $form_state
- * @return unknown_type
+ * Submit handler profile overview.
  */
-function _yamm_profile_delete_profile_form_submit($form, &$form_state) {
-  $form_state['redirect'] = "admin/yamm/profile/delete/{$form_state['values']['internal_name']}";
+function yamm_server_profile_overview_change_default($form, &$form_state) {
+  if (! empty($form_state['values']['profiles']['radios'])) {
+    xoxo_factory_get('yamm_sync_profile')->setDefaultProfile($form_state['values']['profiles']['radios']);
+    drupal_set_message(t('Default profile updated.'));
+  }
 }
 
 /**
- * 
- * @param $form_state
- * @param $internal_name
- * @return unknown_type
- */
-function yamm_profile_delete_confirm($form_state, $internal_name) {
-  $form = array();
-  
-  $form['internal_name'] = array(
-    '#type'  => 'hidden',
-    '#value' => $internal_name,
-  );
-  
-  return confirm_form($form, t('Are you sure you want to delete profile !profile_name ?', array('!profile_name' => $internal_name)), "admin/yamm/profile/edit/{$internal_name}");
-}
-
-/**
- * Handler to delete profile
- * @return unknown_type
- */
-function yamm_profile_delete_confirm_submit($form, &$form_state) {
-  yamm_server_bootstrap_sync();
-  
-  // Deleting the selected profile
-  SyncProfile::delete($form_state['values']['internal_name']);
-  
-  drupal_set_message(t('Profile !profile_name deleted.', array("!profile_name" => $form_state['values']['internal_name'])));
-  
-  // Redirect to profile list
-  $form_state['redirect'] = 'admin/yamm/profile';
-}
-
-/**
- * Handler to back to profile list
- * @param $form
- * @param $form_state
- * @return unknown_type
+ * Handler to back to profile list.
  */
 function _yamm_profile_back_form_submit($form, &$form_state) {
   $form_state['redirect'] = 'admin/yamm/profile';
 }
 
-/**
- * Edit entity settings for known types for profile form
- */
-function yamm_server_profile_settings($form_state, $profile) {
-  $form = array('#tree' => TRUE);
-
-  $types = array();
-
-  foreach (Yamm_EntityFactory::getSupportedTypes() as $type => $desc) {
-    try {
-      $settings = $profile->getSettingsForType($type);
-
-      if (! $settings instanceof Yamm_EntitySettingsAbstract) {
-        $settings = Yamm_EntityFactory::getEntitySettingsInstance($type);
-      }
-
-      $form[$type] = array(
-        '#type'        => 'fieldset',
-        '#collapsible' => FALSE,
-        '#title'       => $desc['name'],
-      );
-
-      $form[$type] += $settings->form();
-
-      $types[] = $type;
-    }
-    catch (Yamm_Entity_ClassNotFoundException $e) {
-      // Silent error, it means our Yamm_Entity does not implement the
-      // Yamm_EntitySettingsAbstract class
-    }
-  }
-
-  $form['profile'] = array(
-    '#type'  => 'value',
-    '#value' => $profile->getInternalName());
-
-  $form['types'] = array(
-    '#type'  => 'value',
-    '#value' => $types);
-
-  $form['submit'] = array(
-    '#type'  => 'submit',
-    '#value' => t('Submit'));
-
-  return $form;
-}
-
-function yamm_server_profile_settings_validate($form, &$form_state) {
-  yamm_server_bootstrap_sync();
-
-  foreach ($form_state['values']['types'] as $type) {
-    $errors = Yamm_EntityFactory::getEntitySettingsInstance($type)->formValidate($form_state['values'][$type]);
-
-    if (! empty($errors)) {
-      foreach ($errors as $field => $error) {
-        form_set_error($type . '][' . $field, $error);
-      }
-    }
-  }
-}
-
 function yamm_server_profile_settings_submit($form, &$form_state) {
   yamm_server_bootstrap_sync();
 
-  $profile = SyncProfile::load($form_state['values']['profile']);
+  $profile = Yamm_Sync_Profile::load($form_state['values']['profile']);
 
   foreach ($form_state['values']['types'] as $type) {
     $settings = Yamm_EntityFactory::getEntitySettingsInstance($type);
@@ -437,7 +85,7 @@ function yamm_server_profile_settings_submit($form, &$form_state) {
 }
 
 /**
- * Multistep handling for client list
+ * Multistep handling for client list.
  */
 function yamm_server_client_list($form_state) {
   if (! empty($form_state) && isset($form_state['op']) && ! empty($form_state['clients'])) {
@@ -450,7 +98,7 @@ function yamm_server_client_list($form_state) {
 }
 
 /**
- * Multistep confirm callback for client list
+ * Multistep confirm callback for client list.
  */
 function _yamm_server_client_list_confirm($form_state) {
   $form = array();
@@ -520,7 +168,7 @@ function _yamm_server_client_list_activate_submit($form, &$form_state) {
 }
 
 /**
- * Client list page
+ * Client list page.
  */
 function _yamm_server_client_list_page() {
   $form = array();
@@ -597,7 +245,7 @@ function _yamm_server_client_list_page() {
 }
 
 /**
- * Submit handler client list page
+ * Submit handler client list page.
  */
 function yamm_server_client_list_update($form, &$form_state) {
   $op = $form_state['values']['options']['op'];
@@ -625,7 +273,7 @@ function yamm_server_client_list_update($form, &$form_state) {
 }
 
 /**
- * Add client form
+ * Add client form.
  */
 function yamm_server_client_edit_form($form_state, $client = NULL) {
   $form = array();
@@ -740,7 +388,7 @@ function yamm_server_client_edit_form_submit($form, &$form_state) {
 
 
 /**
- * Client hello test page
+ * Client hello test page.
  */
 function yamm_server_hello_page($client) {
   $output = '';
@@ -762,7 +410,7 @@ function yamm_server_hello_page($client) {
 }
 
 /**
- * Client overview page
+ * Client overview page.
  */
 function yamm_server_client_overview($client) {
   $output = '';
@@ -777,7 +425,7 @@ function yamm_server_client_overview($client) {
 }
 
 /**
- * Client operation form
+ * Client operation form.
  */
 function yamm_server_client_operations_form($form_state, $client) {
   $form = array();
@@ -834,4 +482,119 @@ function yamm_server_client_operations_form_submit($form, &$form_state) {
   else {
     drupal_set_message(t('Unknown method, push not send'), 'error');
   }
+}
+
+
+/**
+ * Theme the operation form on client overview page.
+ * 
+ * @return string
+ *   (x)html output
+ */
+function theme_yamm_server_client_operations_form($form) {
+  $output .= '<div class="container-inline">' . drupal_render($form['operations']) . '</div>';
+  $output .= drupal_render($form);
+  return $output;
+}
+
+/**
+ * Theme handler client list page
+ * 
+ * @param array $form
+ * @return string
+ *   (x)html output
+ */
+function theme_yamm_server_client_list($form) {
+  $output .= '<div class="container-inline">' . drupal_render($form['options']) . '</div>';
+
+  if (isset($form['clients']['name']) && is_array($form['clients']['name'])) {
+    foreach (element_children($form['clients']['name']) as $key) {
+      $row = array();
+      $row[] = drupal_render($form['clients']['checkboxes'][$key]);
+      $row[] = drupal_render($form['clients']['name'][$key]);
+      $row[] = drupal_render($form['clients']['url'][$key]);
+      $row[] = drupal_render($form['clients']['username'][$key]);
+      $row[] = drupal_render($form['clients']['status'][$key]);
+      $row[] = drupal_render($form['clients']['operations'][$key]);
+      $rows[] = $row;
+    }
+  }
+  else {
+    $rows[] = array(array('data' => t('No clients available.'), 'colspan' => '5'));
+  }
+
+  $output .= theme('table', $form['clients']['header']['#value'], $rows);
+  $output .= drupal_render($form);
+
+  return $output;
+}
+
+/**
+ * Theme handler client list page (client operations).
+ * 
+ * @param object $client
+ * @param string $destination = NULL
+ *   (optional) destination path where to return to.
+ * 
+ * @return string
+ *   (x)html output.
+ */
+function theme_yamm_server_client_operations($client, $destination = NULL) {
+  $links = array(
+    array(
+      'title' => t('Overview'),
+      'href' => 'admin/yamm/client/' . $client->name . '/view',    
+      /*'query' => array('destination' => $destination),*/
+    ),
+    array(
+      'title' => t('Edit'),
+      'href' => 'admin/yamm/client/' . $client->name .'/edit',
+      'query' => array('destination' => $destination),
+    ),
+    array(
+      'title' => t('Test'),
+      'href' => 'admin/yamm/client/' . $client->name . '/hello',
+      'query' => array('destination' => $destination,
+    ),
+  ));
+  return theme('links', $links);
+}
+
+/**
+ * Theme handler for profile overview page.
+ * 
+ * @param array $form
+ *   Form being rendered.
+ * 
+ * @return string
+ *   (x)html output.
+ */
+function theme_yamm_server_profile_overview($form) {
+  $output .= '<div class="container-inline">' . drupal_render($form['options']) . '</div>';
+
+  $headers = array(t('Default'), t('Description'), t("Operations"));
+  $rows = array();
+
+  if (isset($form['profiles']['profile']) && is_array($form['profiles']['profile'])) {
+    foreach (element_children($form['profiles']['profile']) as $key) {
+      $row = array();
+      $row[] = drupal_render($form['profiles']['radios'][$key]);
+      $row[] = drupal_render($form['profiles']['profile'][$key]);
+      $row[] = theme('links', array(
+        array(
+          'title' => t("edit"),
+          'href' => 'admin/objects/yamm_sync_all/' . $key . '/edit',
+        ),
+      ));
+      $rows[] = $row;
+    }
+  }
+  else {
+    $rows[] = array(array('data' => t('No Profile available.'), 'colspan' => '5'));
+  }
+
+  $output .= theme('table', $headers, $rows);
+  $output .= drupal_render($form);
+
+  return $output;
 }

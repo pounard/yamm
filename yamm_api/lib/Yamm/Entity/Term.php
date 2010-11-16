@@ -2,18 +2,13 @@
 // $Id: Term.php,v 1.1 2010/03/24 00:45:43 pounard Exp $
 
 /**
- * @file
- * Term entity for Yamm
- */
-
-/**
  * Term Yamm_EntitySettingsAbstract implementation
  */
 class Yamm_Entity_TermSettings extends Yamm_EntitySettingsAbstract {
 
   /**
    * (non-PHPdoc)
-   * @see Yamm_EntitySettingsAbstract::settingsForm()
+   * @see IFormable::form()
    */
   public function form() {
     $form = array();
@@ -22,7 +17,7 @@ class Yamm_Entity_TermSettings extends Yamm_EntitySettingsAbstract {
       '#type' => 'checkbox',
       '#title' => t('Merge duplicates'),
       '#description' => t('This options will merge client side local terms with incoming server ones if they share the same exact name. Note that terms linked to a UUID will not be merged. There is caveat with this method, to be sure we can handle multiple merge, we use the newly created identifier as reference, which could break existing contrib using term identifiers behavior (i.e. views based on tid).'),
-      '#default_value' => $this->get('merge_duplicates', FALSE)
+      '#default_value' => $this->getOption('merge_duplicates', FALSE)
     );
 
     return $form;
@@ -30,18 +25,18 @@ class Yamm_Entity_TermSettings extends Yamm_EntitySettingsAbstract {
 
   /**
    * (non-PHPdoc)
-   * @see Yamm_EntitySettingsAbstract::formValidate()
+   * @see IFormable::formValidate()
    */
-  public function formValidate($values) {
+  public function formValidate(&$values) {
     // Nothing to validate.
   }
 
   /**
    * (non-PHPdoc)
-   * @see Yamm_EntitySettingsAbstract::formSubmit)
+   * @see IFormable::formSubmit()
    */
-  public function formSubmit($values) {
-    $this->set('merge_duplicates', (bool) $values['merge_duplicates']);
+  public function formSubmit(&$values) {
+    $this->setOption('merge_duplicates', (bool) $values['merge_duplicates']);
   }
 }
 
@@ -188,7 +183,7 @@ class Yamm_Entity_Term extends Yamm_Entity {
     unset($edit['tid']);
     $this->__restoreData($edit);
     taxonomy_save_term($edit);
-    if ($this->getSettings()->get('merge_duplicates', FALSE)) {
+    if ($this->getSettings()->getOption('merge_duplicates', FALSE)) {
       $this->__mergeExisting($edit);
       taxonomy_save_term($edit);
     }
@@ -203,7 +198,7 @@ class Yamm_Entity_Term extends Yamm_Entity {
     $edit = (array) $term;
     $edit['tid'] = (int) $tid;
     $this->__restoreData($edit);
-    if ($this->getSettings()->get('merge_duplicates', FALSE)) {
+    if ($this->getSettings()->getOption('merge_duplicates', FALSE)) {
       $this->__mergeExisting($edit);
     }
     taxonomy_save_term($edit);
