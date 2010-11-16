@@ -113,11 +113,7 @@ class Yamm_TransactionHelper
       $fileFetcher = new Yamm_FileFetcher_Http($this->_server);
       $this->_entityParser = new Yamm_EntityParser($fetcher, $fileFetcher);
       $this->_entityParser->parse();
-
       module_invoke_all('yamm_sync_finished');
-      // FIXME: This might be to heavy.
-      drupal_flush_all_caches();
-
       $this->sendStatus(YAMM_TRANSACTION_STATUS_FINISHED);
       return TRUE;
     }

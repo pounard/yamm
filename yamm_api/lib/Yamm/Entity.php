@@ -55,7 +55,8 @@ abstract class Yamm_EntitySettingsAbstract extends Options implements IFormable
   }
 
   private function __setTypeFromClass() {
-    preg_match('/^Entity([a-zA-Z0-9]+)Settings$/', get_class($this), $matches);
+    //yamm_api_debug("Attempt to get type from " . get_class($this), NULL);
+    preg_match('/^Yamm_Entity_(.*)Settings$/', get_class($this), $matches);
     $this->_type = strtolower($matches[1]);
   }
 }

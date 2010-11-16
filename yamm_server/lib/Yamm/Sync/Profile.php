@@ -95,6 +95,9 @@ class Yamm_Sync_Profile extends XoxoExportableObject implements IFormable
    * 
    * @return Yamm_EntitySettingsAbstract
    *   A fresh new instance, non linked to this. NULL if none saved.
+   * 
+   * @throws Yamm_Entity_ClassNotFoundException
+   *   If no settings class is available.
    */
   public function getSettingsForType($type) {
     $className = Yamm_EntityFactory::findClass($type, Yamm_EntityFactory::CLASS_SETTINGS);
@@ -102,7 +105,6 @@ class Yamm_Sync_Profile extends XoxoExportableObject implements IFormable
     if ($this->hasOption('entity_' . $type)) {
       $settings->setOptions($this->getOption('entity_' . $type));
     }
-    return $settings;
   }
 
   /**

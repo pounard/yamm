@@ -23,7 +23,7 @@ class Yamm_Sync_Backend_Views extends Yamm_Sync_BackendAbstract
   }
 
   /**
-   * Get the Yamm_Entity internal type linked to a node
+   * Get the Yamm_Entity internal type linked to a node.
    *
    * @param view $view
    * 
@@ -34,7 +34,7 @@ class Yamm_Sync_Backend_Views extends Yamm_Sync_BackendAbstract
   public static function getViewEntityType(view $view) {
     $supported = Yamm_EntityFactory::getSupportedTypes();
     foreach ($supported as $type => &$desc) {
-      if ($view->base_table == $desc['base_table']) {
+      if (isset($desc['base_table']) && $view->base_table == $desc['base_table']) {
         return $type;
       }
     }

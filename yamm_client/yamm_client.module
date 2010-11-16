@@ -54,11 +54,10 @@ function yamm_client_xmlrpc() {
  *   to. If you give 0, all transactions will be purged.
  */
 function _yamm_client_cron_helper_purge_transaction($tick = 0) {
-  // Clean timeouted transactions
+  // Clean timeouted transactions.
   if (! $tick) {
     $tick = time() + 10; // Ugly but adding 10 seconds is not a bad idea.
   }
-
   db_query("DELETE FROM {yamm_client_transaction} WHERE updated < %d", array($tick));
 }
 

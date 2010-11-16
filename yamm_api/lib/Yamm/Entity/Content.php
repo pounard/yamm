@@ -78,7 +78,7 @@ class Yamm_Entity_Content extends Yamm_Entity
 
     $values = array(
       'type_name' => $type_name,
-      'groups' => $groups,
+      'groups' => isset($groups) ? $groups : array(),
       'fields' => $fields,
     );
 

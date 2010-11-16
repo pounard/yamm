@@ -492,7 +492,7 @@ function yamm_server_client_operations_form_submit($form, &$form_state) {
  *   (x)html output
  */
 function theme_yamm_server_client_operations_form($form) {
-  $output .= '<div class="container-inline">' . drupal_render($form['operations']) . '</div>';
+  $output = '<div class="container-inline">' . drupal_render($form['operations']) . '</div>';
   $output .= drupal_render($form);
   return $output;
 }

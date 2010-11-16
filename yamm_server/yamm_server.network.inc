@@ -119,18 +119,24 @@ function _yamm_server_client_pull_cb($tid) {
 
     // An empty array means the phase is finished.
     if (empty($entities)) {
+      // An empty phases array means the transaction is finished.
       if (empty($transaction->state['phases'])) {
         $transaction->state['offset'] = 0;
       }
+      // Else, go to next phase.
       else {
         $transaction->state['phase'] = array_shift($transaction->state['phases']);
       }
     }
+
     // Treat entities and increment offset.
     else {
       foreach ($entities as $entity) {
-        if ($settings = $profile->getSettingsForType($entity->getType())) {
-          $entity->setSettings($settings);
+        try {
+          $entity->setSettings($profile->getSettingsForType($entity->getType()));
+        }
+        catch (Yamm_Entity_ClassNotFoundException $e) {
+          // Silent error.
         }
         $ret[] = Yamm_Entity::serialize($entity);
       }

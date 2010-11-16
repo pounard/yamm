@@ -122,7 +122,7 @@ function yamm_server_menu() {
 function yamm_server_theme() {
   $items = array();
   $file = 'theme.inc';
-  $path = drupal_get_path('module', 'yamm_server');
+  $path = drupal_get_path('module', 'yamm_server') . '/theme';
   // Admin forms
   $items['yamm_server_client_overview'] = array(
     'arguments' => array('client' => NULL),
@@ -515,19 +515,10 @@ function yamm_server_transaction_get_client($tid) {
  */
 function yamm_server_transaction_update_status($tid, $status, $last_update = NULL) {
   if ($last_update) {
-    db_query("UPDATE {yamm_server_transaction} SET status = %d, updated = %d, last_update = %d WHERE tid = '%s'", array(
-      $status, 
-      time(),
-      $last_update, 
-      $tid,
-    ));
+    db_query("UPDATE {yamm_server_transaction} SET status = %d, updated = %d, last_update = %d WHERE tid = '%s'", array($status, time(), $last_update, $tid));
   }
   else {
-    db_query("UPDATE {yamm_server_transaction} SET status = %d, updated = %d WHERE tid = '%s'", array(
-      $status, 
-      time(), 
-      $tid,
-    ));
+    db_query("UPDATE {yamm_server_transaction} SET status = %d, updated = %d WHERE tid = '%s'", array($status, time(), $tid));
   }
 }
 
@@ -555,7 +546,7 @@ function yamm_server_client_check_transaction($tid) {
 
   $transaction = yamm_server_transaction_load($tid);
 
-  if (! $transaction) {
+  if (!$transaction) {
     watchdog('yamm_server', 'Unknown transaction incomming !tid', array('!tid' => $tid), WATCHDOG_WARNING);
     module_invoke_all('yamm_server', 'incoming_pull_error', $tid);
     return FALSE;
@@ -563,7 +554,7 @@ function yamm_server_client_check_transaction($tid) {
 
   $client = yamm_server_client_load($transaction->client);
 
-  if (! $client) {
+  if (!$client) {
     watchdog('yamm_server', 'Unknown client for transaction !tid', array('!tid' => $tid), WATCHDOG_WARNING);
     yamm_server_transaction_update_status($tid, YAMM_TRANSACTION_STATUS_DENIED);
     module_invoke_all('yamm_server', 'incoming_pull_error', $tid);
@@ -571,8 +562,8 @@ function yamm_server_client_check_transaction($tid) {
   }
 
   // Security check, does not allow suspended clients to pull, except in case
-  // of manual push order
-  if (! $transaction->manual && $client->status != YAMM_STATUS_ACTIVATE) {
+  // of manual push order.
+  if (!$transaction->manual && $client->status != YAMM_STATUS_ACTIVATE) {
     watchdog('yamm_server', 'Client @name is suspended and transaction !tid is not in manual mode, aborting', array(
       '@name' => $client->name, 
       '!tid' => $tid,
@@ -584,14 +575,14 @@ function yamm_server_client_check_transaction($tid) {
     return FALSE;
   }
 
-  // Check transaction status
+  // Check transaction status.
   if ($transaction->status == YAMM_TRANSACTION_STATUS_WAITING) {
     watchdog('yamm_server', 'Transaction !tid sent signal with status !status', array('!tid' => $tid, '!status' => $transaction->status), WATCHDOG_NOTICE);
     module_invoke_all('yamm_server', 'incoming_pull_ok', $tid);
     return TRUE;
   }
 
-  // Unexpected behavior
+  // Unexpected behavior.
   watchdog('yamm_server', 'Transaction unknown error for !tid', array('!tid' => $tid), WATCHDOG_WARNING);
   yamm_server_transaction_update_status($tid, YAMM_TRANSACTION_STATUS_UNKNOWN);
   module_invoke_all('yamm_server', 'incoming_pull_error', $tid);
@@ -605,7 +596,10 @@ function yamm_server_client_status_cb($tid, $status) {
   if (! yamm_server_client_check_transaction($tid)) {
     return FALSE;
   }
-
+  yamm_api_debug("Client sent status @status for transaction @tid", array(
+    '@status' => $status,
+    '@tid' => $tid,
+  ));
   yamm_server_transaction_update_status($tid, $status);
   return TRUE;
 }
@@ -617,8 +611,7 @@ function yamm_server_client_pull_cb($tid) {
   if (! yamm_server_client_check_transaction($tid)) {
     return FALSE;
   }
-  
-  module_load_include('inc', 'yamm_server', 'yamm_server.pull');
+  module_load_include('inc', 'yamm_server', 'yamm_server.network');
   return _yamm_server_client_pull_cb($tid);
 }
 
@@ -629,8 +622,7 @@ function yamm_server_client_pull_dependencies_cb($tid, $uuid_array) {
   if (! yamm_server_client_check_transaction($tid)) {
     return FALSE;
   }
-
-  module_load_include('inc', 'yamm_server', 'yamm_server.pull');
+  module_load_include('inc', 'yamm_server', 'yamm_server.network');
   return _yamm_server_client_pull_dependencies($tid, $uuid_array);
 }
 

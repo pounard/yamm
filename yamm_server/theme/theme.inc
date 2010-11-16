@@ -14,7 +14,7 @@
  */
 function theme_yamm_server_page_back() {
   // I really do not like the $_REQUEST variable
-  if ($destination = $_REQUEST['destination']) {
+  if (isset($_REQUEST['destination']) && $destination = $_REQUEST['destination']) {
     return '<p>' . l(t('Back to previous page'), $destination) . '</p>';
   }
 }

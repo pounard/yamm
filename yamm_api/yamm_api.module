@@ -483,11 +483,9 @@ function yamm_api_uuid_delete($uuid) {
  */
 function yamm_api_uuid_load($uuid) {
   static $cache = array();
-
-  if (! $cache[$uuid]) {
+  if (!array_key_exists($uuid, $cache)) {
     $cache[$uuid] = db_fetch_object(db_query("SELECT * FROM {yamm_uuid} WHERE uuid = '%s' LIMIT 1", $uuid));
   }
-
   return $cache[$uuid];
 }
 
