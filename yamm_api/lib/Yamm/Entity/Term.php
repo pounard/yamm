@@ -4,8 +4,8 @@
 /**
  * Term Yamm_EntitySettingsAbstract implementation
  */
-class Yamm_Entity_TermSettings extends Yamm_EntitySettingsAbstract {
-
+class Yamm_Entity_TermSettings extends Yamm_EntitySettingsAbstract
+{
   /**
    * (non-PHPdoc)
    * @see IFormable::form()
@@ -43,8 +43,8 @@ class Yamm_Entity_TermSettings extends Yamm_EntitySettingsAbstract {
 /**
  * Simple Term Yamm_Entity implementation
  */
-class Yamm_Entity_Term extends Yamm_Entity {
-
+class Yamm_Entity_Term extends Yamm_Entity
+{
   /**
    * (non-PHPdoc)
    * @see Entity::_objectLoad()
@@ -58,19 +58,21 @@ class Yamm_Entity_Term extends Yamm_Entity {
    * @see Entity::_constructDependencies()
    */
   protected function _constructDependencies($term) {
-    // Create vocabulary as dependency
-    $vocabulary_uuid = $this->addDependency('vocabulary', $term->vid);
-    $this->setData('vocabulary', $vocabulary_uuid);
+    // Add vocabulary dependency.
+    $this->setData('vocabulary', $this->addDependency('vocabulary', $term->vid));
 
-    // And parents
+    // And parents.
     $parents = array();
     foreach (taxonomy_get_parents($term->tid) as $_term) {
-      $parent_uuid = $this->addDependency('term', $_term->tid);
-      $parents[$parent_uuid] = $parent_uuid;
+      // This may happen, exclude the term itself.
+      if ($_term->tid != $term->tid) {
+        $parent_uuid = $this->addDependency('term', $_term->tid);
+        $parents[$parent_uuid] = $parent_uuid;
+      }
     }
     $this->setData('parents', $parents);
 
-    // And relations
+    // And relations.
     $related = array();
     foreach (taxonomy_get_related($term->tid) as $_term) {
       $related_uuid = $this->addDependency('term', $_term->tid);
@@ -78,8 +80,11 @@ class Yamm_Entity_Term extends Yamm_Entity {
     }
     $this->setData('relations', $related);
 
-    // And synonyms
+    // And synonyms.
     $this->setData('synonyms', taxonomy_get_synonyms($term->tid));
+
+    // Do some cleanup that could break the restore process.
+    unset($term->parents, $term->relations, $term->synonyms);
   }
 
   /**
@@ -89,22 +94,23 @@ class Yamm_Entity_Term extends Yamm_Entity {
    * @return void
    */
   private function __restoreData(&$edit) {
+    // Restore vocabulary.
     $edit['vid'] = (int) Yamm_EntityFactory::getIdentifierByUuid($this->getData('vocabulary'));
     $edit['parent'] = array();
 
-    // Restore parents
+    // Restore parents.
     foreach ($this->getData('parents') as $uuid) {
       $tid = (int) Yamm_EntityFactory::getIdentifierByUuid($uuid);
       $edit['parent'][$tid] = $tid;
     }
 
-    // Restore relations
+    // Restore relations.
     foreach ($this->getData('relations') as $uuid) {
       $tid = (int) Yamm_EntityFactory::getIdentifierByUuid($uuid);
       $edit['relations'][$tid] = $tid;
     }
 
-    // Restore synonyms
+    // Restore synonyms.
     $edit['synonyms'] = $this->getData('synonyms');
   }
 

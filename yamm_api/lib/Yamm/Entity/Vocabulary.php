@@ -67,7 +67,7 @@ class Yamm_Entity_Vocabulary extends Yamm_Entity
    * @see Yamm_EntityAbstract::_constructDependencies()
    */
   protected function _constructDependencies($vocabulary) {
-    // No dependencies
+    // No dependencies.
   }
 
   /**

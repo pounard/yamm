@@ -24,8 +24,8 @@ class Yamm_FileFetcher_Http extends Yamm_FileFetcher
    * @see Yamm_FileFetcher::_fetch()
    */
   public function _fetch($filepath) {
-    $source_url = yamm_api_clean_url($this->_server->getUrl()) . '/' . $filepath;
-
+    $source_url = yamm_api_clean_url($this->_server->getUrl()) . $filepath;
+    
     // Get file contents.
     if ($data = file_get_contents($source_url, FILE_BINARY)) {
 

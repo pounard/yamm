@@ -473,14 +473,14 @@ abstract class Yamm_Entity
    *
    * @param string $type
    *   Object type to add as dependency.
-   * @param int $idenfier
+   * @param int $identifier
    *   Internal id of object.
    * 
    * @return string
    *   Object UUID you can then store as data.
    */
-  public function addDependency($type, $idenfier) {
-    $uuid = Yamm_EntityFactory::getUuidForType($type, $idenfier, TRUE);
+  public function addDependency($type, $identifier) {
+    $uuid = Yamm_EntityFactory::getUuidForType($type, $identifier, TRUE);
     $this->__dependencies[$uuid] = $uuid;
     return $uuid;
   }
@@ -559,7 +559,7 @@ abstract class Yamm_Entity
       }
 
       $this->_update($this->__object, $this->__identifier);
-      yamm_api_debug('Update ' . $this->__type . ' ' . $this->__identifier);
+      yamm_api_debug('Update @entity', array('@entity' => $this));
 
       $this->__hookUpdate();
     }
@@ -571,12 +571,12 @@ abstract class Yamm_Entity
       $this->__identifier = $this->_save($this->__object);
 
       if (! $this->__identifier) {
-        yamm_api_debug('Insert (after deletion) failed ' . $this->__type);
+        yamm_api_debug('Insert after deletion failed for @entity', array('@entity' => $this));
         throw new Yamm_Entity_UnableToSaveObjectException("Object could not be saved (after deletion)");
       }
 
       yamm_api_uuid_save($this->__uuid, $this->__type, $this->__identifier);
-      yamm_api_debug('Insert ' . $this->__type . ' ' . $this->__identifier);
+      yamm_api_debug('Insert after deletion for @entity', array('@entity' => $this));
 
       $this->__hookSave();
     }
@@ -586,12 +586,12 @@ abstract class Yamm_Entity
       $this->__identifier = $this->_save($this->__object);
 
       if (! $this->__identifier) {
-        yamm_api_debug('Insert failed ' . $this->__type);
+        yamm_api_debug('Insert failed for @entity', array('@entity' => $this));
         throw new Yamm_Entity_UnableToSaveObjectException("Object could not be saved");
       }
 
       yamm_api_uuid_save($this->__uuid, $this->__type, $this->__identifier);
-      yamm_api_debug('Insert ' . $this->__type . ' ' . $this->__identifier);
+      yamm_api_debug('Insert @entity', array('@entity' => $this));
 
       $this->__hookSave();
     }

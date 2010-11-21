@@ -453,12 +453,12 @@ function yamm_api_uuid_create() {
  * @param string $uuid
  * @param string $type
  * @param int|string $identifier
+ * 
  * @return boolean
  *   TRUE in case of success, FALSE if already exists or conflicts
  */
 function yamm_api_uuid_save($uuid, $type, $identifier) {
-  db_query("INSERT INTO {yamm_uuid} (uuid, type, identifier) VALUES ('%s', '%s', '%s')", array(
-    $uuid, $type, $identifier));
+  db_query("INSERT INTO {yamm_uuid} (uuid, type, identifier) VALUES ('%s', '%s', '%s')", array($uuid, $type, $identifier));
   return (bool) db_error();
 }
 
@@ -475,18 +475,19 @@ function yamm_api_uuid_delete($uuid) {
 }
 
 /**
- * Load corresponding uuid line from database
- * This method will be usefull for client at pull time
+ * Load corresponding uuid line from database. This method will be usefull for
+ * client at pull time.
+ * 
+ * Never, ever, attempt to implement a static cache here, because within the
+ * same execution flow, objects will be added and removed and this will cause
+ * client crashes at parse time.
  *
  * @param string $uuid
+ * 
  * @return object
  */
 function yamm_api_uuid_load($uuid) {
-  static $cache = array();
-  if (!array_key_exists($uuid, $cache)) {
-    $cache[$uuid] = db_fetch_object(db_query("SELECT * FROM {yamm_uuid} WHERE uuid = '%s' LIMIT 1", $uuid));
-  }
-  return $cache[$uuid];
+  return db_fetch_object(db_query("SELECT * FROM {yamm_uuid} WHERE uuid = '%s' LIMIT 1", $uuid));
 }
 
 /**
@@ -561,9 +562,19 @@ function yamm_api_debug_mode() {
  * @param array $variables = NULL
  *   (optional) Same signature as t() function, this is the variables for
  *   message inclusion.
+ * @param boolean $raw_variables = FALSE
+ *   (optional) If set to TRUE, will systemtically do a print_r() of given
+ *   variables if not string, instead of formating it.
  */
-function yamm_api_debug($message, $variables = array()) {
+function yamm_api_debug($message, $variables = array(), $raw_variables = FALSE) {
   global $debug;
+
+  // Format variables.
+  foreach ($variables as $key => $variable) {
+    if ($variable instanceof Yamm_Entity) {
+      $variables[$key] = $variable->getType() . ' ' . $variable->getIdentifier() . ' [ ' . $variable->getUuid() . ' ]'; 
+    }
+  }
 
   // If daemoncli is in debug mode, output into console.
   if ($debug) {
