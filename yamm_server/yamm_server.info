@@ -7,7 +7,7 @@ dependencies[] = xoxo
 dependencies[] = yamm_api
 dependencies[] = views
 core = 6.x
-php = 5.1
+php = 5.2
 
 ; Information added by drupal.org packaging script on 2010-03-26
 version = "6.x-2.0-alpha2"
