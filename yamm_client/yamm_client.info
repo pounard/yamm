@@ -2,6 +2,7 @@
 name = Yamm client
 description = Yet Another Migration Module client side code
 package = Yamm
+dependencies[] = oox
 dependencies[] = daemoncli
 dependencies[] = yamm_api
 core = 6.x
