@@ -583,7 +583,7 @@ function theme_yamm_server_profile_overview($form) {
       $row[] = theme('links', array(
         array(
           'title' => t("edit"),
-          'href' => 'admin/objects/yamm_sync_profile/' . $key . '/edit',
+          'href' => 'admin/objects/yamm_sync_profile/' . $key . '/edit', 
         ),
       ));
       $rows[] = $row;
