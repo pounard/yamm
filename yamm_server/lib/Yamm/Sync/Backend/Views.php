@@ -32,8 +32,7 @@ class Yamm_Sync_Backend_Views extends Yamm_Sync_BackendAbstract
    * @throws Yamm_Sync_ProfileException
    */
   public static function getViewEntityType(view $view) {
-    $supported = Yamm_EntityFactory::getSupportedTypes();
-    foreach ($supported as $type => &$desc) {
+    foreach (oox_registry_get('yamm_entity')->getItemCache() as $type => $desc) {
       if (isset($desc['base_table']) && $view->base_table == $desc['base_table']) {
         return $type;
       }
@@ -117,14 +116,14 @@ class Yamm_Sync_Backend_Views extends Yamm_Sync_BackendAbstract
     }
 
     try {
-      // Prepare view
+      // Prepare view.
       $view->set_display(NULL);
       $view->pre_execute();
-      // Emulate incremental behavior using page feature
+      // Emulate incremental behavior using page feature.
       $view->set_use_pager(TRUE);
       $view->set_items_per_page($limit);
       $view->set_offset($offset);
-      // Get results
+      // Get results.
       $view->execute();
 
       $count = count($view->result);
@@ -172,9 +171,9 @@ class Yamm_Sync_Backend_Views extends Yamm_Sync_BackendAbstract
     // Building views list.
     $base_table = $available_views = $selected_views = array();
     $views_list = views_get_all_views();
-    $entities = yamm_api_get_entities();
+    $default_views = array();
 
-    foreach ($entities as $type => $value) {
+    foreach (oox_registry_get('yamm_entity')->getItemCache() as $type => $value) {
       // Getting all base table with entities.
       if (isset($value['base_table'])) {
         $base_table[$value['base_table']] = $value['base_table'];
@@ -195,7 +194,7 @@ class Yamm_Sync_Backend_Views extends Yamm_Sync_BackendAbstract
     // Check all selected views.
     foreach ($selected_views as $view) {
       //  Check if view has not been deleted. 
-      if (key_exists($view->name, $default_views)) {
+      if (array_key_exists($view->name, $default_views)) {
         $default_views[$view->name] = $view->name;
       }
     }

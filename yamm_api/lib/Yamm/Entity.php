@@ -62,172 +62,6 @@ abstract class Yamm_EntitySettingsAbstract extends Options implements IFormable
 }
 
 /**
- * Factory class for entities
- *
- * This class should contain all Drupal core interaction, to let the Yamm_Entity
- * class as neutral as possible.
- */
-class Yamm_EntityFactory
-{
-  const CLASS_ENTITY = 1;
-  const CLASS_SETTINGS = 2;
-
-  /**
-   * Get UUID for object.
-   *
-   * @param string $type
-   * @param int|string $identifier
-   * 
-   * @return string
-   */
-  public static function getUuidForType($type, $identifier, $generate = FALSE) {
-    if (!$uuid = yamm_api_uuid_get($type, $identifier)) {
-      if ($generate) {
-        $uuid = yamm_api_uuid_create();
-        yamm_api_uuid_save($uuid, $type, $identifier);
-      }
-      else {
-        throw new Yamm_Entity_UnknownUuidException("Unable to fetch UUID for type " . $type . ", identifier " . $identifier . ".");
-      }
-    }
-    return $uuid;
-  }
-
-  /**
-   * Get internal identifier of an object, using its UUID.
-   *
-   * @param string $uuid
-   * 
-   * @return int|string
-   *   Internal identifier. For objects that are awaiting for integer, don't
-   *   forget to cast NULL in case of failure.
-   */
-  public static function getIdentifierByUuid($uuid) {
-    if ($uuid_data = yamm_api_uuid_load($uuid)) {
-      return $uuid_data->identifier;
-    }
-    throw new Yamm_Entity_UnknownUuidException("UUID " . $uuid . " does not exists in database.");
-  }
-
-  /**
-   * Return all known Yamm_Entity types.
-   *
-   * @return array
-   */
-  public static function getSupportedTypes() {
-    return yamm_api_get_entities();
-  }
-
-  /**
-   * Return settings class for given type.
-   *
-   * @param string $type
-   * 
-   * @return Yamm_EntitySettingsAbstract
-   *   Specialized Yamm_EntitySettingsAbstract instance.
-   */
-  public static function getEntitySettingsInstance($type) {
-    $class = self::findClass($type, Yamm_EntityFactory::CLASS_SETTINGS);
-    return new $class();
-  }
-
-  /**
-   * Execute given hook.
-   *
-   * @param string $hook
-   *   Hook name
-   * @param ..
-   *   Parameters to gave to hooks
-   * 
-   * @return mixed
-   *   Keyed array, keys are module name, values are hook return.
-   */
-  public static function executeHook($hook) {
-    // Fetch hook parameters.
-    $args = func_get_args();
-    // Remove hook name from parameters.
-    array_shift($args);
-    // Real hook name, $hook parameter is the $op parameter
-    array_unshift($args, 'yamm_entity_' . $hook);
-    // Call it!
-    return call_user_func_array('module_invoke_all', $args);
-  }
-
-  /**
-   * Already loaded classes
-   * 
-   * @var array
-   */
-  private static $__classes = array();
-
-  /**
-   * Get class name by type.
-   * 
-   * @param string $type
-   * @param int $class = Yamm_EntityFactory::CLASS_ENTITY
-   *   One of the Yamm_EntityFactory::CLASS_* constants, determine which defined
-   *   class it will return.
-   * 
-   * @return string
-   *   Class name.
-   */
-  public static function getClassNameByType($type, $class = Yamm_EntityFactory::CLASS_ENTITY) {
-    $className = NULL;
-
-    switch ($class) {
-      case Yamm_EntityFactory::CLASS_ENTITY:
-        $className = 'Yamm_Entity_' . ucfirst(strtolower($type));
-        break;
-  
-      case Yamm_EntityFactory::CLASS_SETTINGS:
-        $className = 'Yamm_Entity_' . ucfirst(strtolower($type)) . 'Settings';
-        break;
-  
-      default:
-        throw new Yamm_Entity_ClassNotFoundException("Asked a wrong class type");
-    }
-
-    return $className;
-  }
-
-  /**
-   * Find specialized entity class.
-   *
-   * @param string $type
-   * @param int $class = Yamm_EntityFactory::CLASS_ENTITY
-   *   One of the Yamm_EntityFactory::CLASS_* constants, determine which defined
-   *   class it will return.
-   * 
-   * @return string
-   *   Class name, or NULL in case of failure.
-   */
-  public static function findClass($type, $class = Yamm_EntityFactory::CLASS_ENTITY) {
-    if (isset(self::$__classes[$class][$type])) {
-      return self::$__classes[$class][$type];
-    }
-
-    $types = self::getSupportedTypes();
-
-    if (! isset($types[$type])) {
-      throw new Yamm_Entity_ClassNotFoundException("Unsupported entity type " . $type . " (not defined by a module).");
-    }
-
-    if (isset($types[$type]['file'])) {
-      require_once($types[$type]['file']);
-    }
-
-    $className = self::getClassNameByType($type, $class);
-
-    if (class_exists($className)) {
-      self::$__classes[$class][$type] = $className;
-      return $className;
-    }
-
-    throw new Yamm_Entity_ClassNotFoundException("Class " . $className . " is missing. Check your classes definition.");
-  }
-}
-
-/**
  * This class represent a migrated object.
  * 
  * Remember that those objects are highly volatile. An Entity exists only the
@@ -238,7 +72,7 @@ class Yamm_EntityFactory
  * get back some information, such as file fetcher, that can be usefull for
  * file copy.
  */
-abstract class Yamm_Entity
+abstract class Yamm_Entity extends Registrable
 {
   /**
    * Create an instance by UUID.
@@ -250,8 +84,7 @@ abstract class Yamm_Entity
    */
   public static function loadByUuid($uuid) {
     if ($uuid_data = yamm_api_uuid_load($uuid)) {
-      $class = Yamm_EntityFactory::findClass($uuid_data->type);
-      return new $class($uuid);
+      return oox_registry_get('yamm_entity')->getItem($uuid_data->type, $uuid);
     }
     throw new Yamm_Entity_UnknownUuidException("UUID " . $uuid . " does not exists in database.");
   }
@@ -278,10 +111,9 @@ abstract class Yamm_Entity
   public static function unserialize($serializedEntity) {
     $data = explode(':', $serializedEntity, 2);
 
-    Yamm_EntityFactory::findClass($data[0]);
     $entity = unserialize(base64_decode($data[1]));
 
-    if (! $entity instanceof Yamm_Entity) {
+    if (!$entity instanceof Yamm_Entity) {
       throw new Yamm_Entity_UnableToUnserializeException("Unable to unserialize object.");
     }
 
@@ -318,8 +150,7 @@ abstract class Yamm_Entity
     }
 
     try {
-      $class = Yamm_EntityFactory::findClass($this->__type, Yamm_EntityFactory::CLASS_SETTINGS);
-      return new $class();
+      return Yamm_EntityFactory::getEntitySettingsInstance($this->_type);
     }
     catch (Yamm_Entity_ClassNotFoundException $e) {
       return NULL;
@@ -355,22 +186,6 @@ abstract class Yamm_Entity
    */
   public function setParser(Yamm_EntityParser $parser) {
     $this->__parser = $parser;
-  }
-
-  /**
-   * Internal type.
-   * 
-   * @var string
-   */
-  private $__type = 'void';
-
-  /**
-   * Get entity internal type.
-   *
-   * @return string
-   */
-  public function getType() {
-    return $this->__type;
   }
 
   /**
@@ -486,23 +301,22 @@ abstract class Yamm_Entity
   }
 
   /**
-   * Main constructor.
+   * Differed constructor. This method is being called at instanciation time.
    *
    * @param string $uuid
    * 
    * @return Yamm_Entity
    *   Any class subclassing Yamm_Entity.
    */
-  protected function __construct($uuid, Yamm_EntityParser $parser = NULL) {
+  public function _setUuid($uuid)  {
     $this->__uuid = $uuid;
     $uuid_data = yamm_api_uuid_load($uuid);
     $this->__identifier = $uuid_data->identifier;
-    $this->__setTypeFromClass();
     if ($parser) {
       $this->__parser = $parser;
     }
     if (! $object = $this->_objectLoad($this->__identifier)) {
-      throw new Yamm_Entity_UnableToLoadObjectException("Return object is null for type " . $this->__type . " and identifier " . $this->__identifier . ".");
+      throw new Yamm_Entity_UnableToLoadObjectException("Return object is null for type " . $this->_type . " and identifier " . $this->__identifier . ".");
     }
     $this->__object = $object;
     $this->_constructDependencies($this->__object);
@@ -535,11 +349,6 @@ abstract class Yamm_Entity
    */
   private function __hookSave() {
     Yamm_EntityFactory::executeHook('save', $this);
-  }
-
-  private function __setTypeFromClass() {
-    preg_match('/^Yamm_Entity_([a-zA-Z0-9]+)$/', get_class($this), $matches);
-    $this->__type = strtolower($matches[1]);
   }
 
   /**
@@ -575,7 +384,7 @@ abstract class Yamm_Entity
         throw new Yamm_Entity_UnableToSaveObjectException("Object could not be saved (after deletion)");
       }
 
-      yamm_api_uuid_save($this->__uuid, $this->__type, $this->__identifier);
+      yamm_api_uuid_save($this->__uuid, $this->_type, $this->__identifier);
       yamm_api_debug('Insert after deletion for @entity', array('@entity' => $this));
 
       $this->__hookSave();
@@ -590,7 +399,7 @@ abstract class Yamm_Entity
         throw new Yamm_Entity_UnableToSaveObjectException("Object could not be saved");
       }
 
-      yamm_api_uuid_save($this->__uuid, $this->__type, $this->__identifier);
+      yamm_api_uuid_save($this->__uuid, $this->_type, $this->__identifier);
       yamm_api_debug('Insert @entity', array('@entity' => $this));
 
       $this->__hookSave();

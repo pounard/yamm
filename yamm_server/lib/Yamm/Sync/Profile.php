@@ -14,15 +14,6 @@ class Yamm_Sync_ProfileException extends Exception {}
 class Yamm_Sync_Profile extends XoxoExportableObject implements IFormable
 {
   /**
-   * Delete a profile by name
-   *
-   * @param string $name
-   */
-  public static function delete($name) {
-    db_query("DELETE FROM {yamm_server_profile} WHERE profile = '%s'", $name);
-  }
-
-  /**
    * Backend static cache.
    * 
    * @var Yamm_Sync_Backend_Interface
@@ -91,6 +82,8 @@ class Yamm_Sync_Profile extends XoxoExportableObject implements IFormable
   /**
    * Get settings for a certain type.
    *
+   * This should be refactored.
+   *
    * @param string $type
    * 
    * @return Yamm_EntitySettingsAbstract
@@ -136,7 +129,7 @@ class Yamm_Sync_Profile extends XoxoExportableObject implements IFormable
     }
 
     // Entities options.
-    foreach (Yamm_EntityFactory::getSupportedTypes() as $type => $desc) {
+    foreach (oox_registry_get('yamm_entity')->getItemCache() as $type => $desc) {
       try {
         $settings = $this->getSettingsForType($type);
         if (!$settings instanceof Yamm_EntitySettingsAbstract) {
@@ -152,8 +145,8 @@ class Yamm_Sync_Profile extends XoxoExportableObject implements IFormable
         $types[] = $type;
       }
       catch (Yamm_Entity_ClassNotFoundException $e) {
-        // Silent error, it means our Yamm_Entity does not implement the
-        // Yamm_EntitySettingsAbstract class.
+        // Silent error, our Yamm_Entity does not implement the
+        // Yamm_EntitySettingsAbstract class or just does not exists.
       }
     }
     $form['types'] = array(

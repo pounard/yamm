@@ -25,8 +25,8 @@ Latest stuff (important)
  * If server is configured to change users password, and send the configured
    client user password, it should also update its own configuration to be able
    to send it data later.
- * Server profile handling should be rewrote in order to match new naming
-   conventions.
+ * Use XoXo objects for clients.
+ * Use OOX registry for entities.
 
 Done
 ----
@@ -36,6 +36,8 @@ Done
  * Add the server url in client transaction table.
  * Server should send its own base url as a parameter when pushing the order to
    client so the client would now on which server it should fetch data.
+ * Server profile handling should be rewrote in order to match new naming
+   conventions.
 
 Client handling
 ---------------

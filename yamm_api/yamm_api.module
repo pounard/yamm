@@ -68,51 +68,51 @@ function yamm_api_perms() {
 }
 
 /**
- * Implementation of hook_yamm().
+ * Implementation of hook_yamm_entities().
  */
-function yamm_api_yamm() {
-  $path = drupal_get_path('module', 'yamm_api') . '/lib/Yamm/Entity';
-  return array(
-    'content' => array(
-      'name' => t('Content type'),
-      'file' => $path . '/Content.php',
-    ),
-    'node' => array(
-      'name' => t('Node'),
-      'file' => $path . '/Node.php',
-      'base_table' => 'node',
-      'update_field' => 'changed',
-    ),
-    'term' => array(
-      'name' => t('Taxonomy term'),
-      'file' => $path . '/Term.php',
-      'base_table' => 'term_data',
-    ),
-    'vocabulary' => array(
-      'name' => t('Taxonomy vocabulary'),
-  	  'file' => $path . '/Vocabulary.php',
-    ),
-    'user' => array(
-      'name' => t('User'),
-  	  'file' => $path . '/User.php',
-      'base_table' => 'users',
-    ),
-    'file' => array(
-      'name' => t('File'),
-      'file' => $path . '/File.php',
-    ),
-/*
-    'theme' => array(
-      'name' => t('Theme'),
-      'module' => 'yamm_api'),
- */
-/*
-    'view' => array(
-      'name' => t('Views'),
-      'module' => 'yamm_api',
-      'base_table' => 'views_view'),
- */
+function yamm_api_yamm_entities() {
+  $items = array();
+  $items['content'] = array(
+    'name' => t('Content type'),
+    'class' => 'Yamm_Entity_Content',
   );
+  $items['node'] = array(
+    'name' => t('Node'),
+    'base_table' => 'node',
+    'update_field' => 'changed',
+    'class' => 'Yamm_Entity_Node',
+  );
+  $items['term'] = array(
+    'name' => t('Taxonomy term'),
+    'base_table' => 'term_data',
+    'class' => 'Yamm_Entity_Term',
+  );
+  $items['vocabulary'] = array(
+    'name' => t('Taxonomy vocabulary'),
+    'class' => 'Yamm_Entity_Vocabulary',
+  );
+  $items['user'] = array(
+    'name' => t('User'),
+    'base_table' => 'users',
+    'class' => 'Yamm_Entity_User',
+  );
+  $items['file'] = array(
+    'name' => t('File'),
+    'class' => 'Yamm_Entity_File',
+  );
+  return $items;
+}
+
+/**
+ * Implementation of hook_oox_registry().
+ */
+function yamm_api_oox_registry() {
+  $items[] = array();
+  $items['yamm_entity'] = array(
+    'class' => 'Yamm_EntityRegistry',
+    'hook' => 'yamm_entities',
+  );
+  return $items;
 }
 
 /**
@@ -124,82 +124,9 @@ function yamm_api_xmlrpc() {
       'yamm.hello',
       'yamm_api_hello_cb',
       array('boolean'),
-      t('Simple hello'))
+      t('Simple hello')
+    ),
   );
-}
-
-/**
- * Get all defined entities.
- *
- * @return array
- */
-function yamm_api_get_entities() {
-  static $entities_definition;
-
-  if (empty($entities_definition)) {
-    // Build cache
-    if (!$cached = cache_get('entities', 'cache_yamm')) {
-      // Check for conflicts
-      $base_tables = array();
-      $types = array();
-
-      $entities_definition = array();
-
-      foreach (module_implements('yamm') as $module) {
-        $result = module_invoke($module, 'yamm');
-
-        foreach ($result as $type => &$definition) {  
-          // Check for valid file
-          if (isset($definition['file'])) {
-            if (!preg_match('/\//', $definition['file'])) {
-              $definition['file'] = drupal_get_path('module', $module) . '/' . $definition['file'];
-            }
-            if (file_exists($definition['file'])) {
-              require_once $definition['file'];
-            }
-            else {
-              $msg = "Entity '@type' is defined by module '@module' in a non existant file";
-              $arg = array('@type' => $type, '@module' => $module);
-              watchdog('yamm_api', $msg, $arg, WATCHDOG_ALERT);
-            }
-          }
-
-          // If file is invalid, undefined, or does not exists, try the class
-          // existence anyway.
-          $className = Yamm_EntityFactory::getClassNameByType($type);
-          if (! class_exists($className)) {
-            $msg = "Entity '@type' is defined by module '@module' but associated '@class' class does not exists";
-            $arg = array('@type' => $type, '@module' => $module, '@class' => $className);
-            watchdog('yamm_api', $msg, $arg, WATCHDOG_ERROR);
-            continue;
-          }
-
-          // Check for base_table conflicts
-          if (isset($definition['base_table'])) {
-            if (isset($base_tables[$definition['base_table']])) {
-              $msg = "Entity '@type' defined by module '@module' conflicts, it uses an already defined base_table";
-              $arg = array('@type' => $type, '@module' => $module);
-              watchdog('yamm_api', $msg, $arg, WATCHDOG_ERROR);
-              continue;
-            } 
-            else {
-              $base_tables[$definition['base_table']] = TRUE;
-            }
-          }
-
-          $definition['module'] = $module;
-          $entities_definition[$type] = $definition;
-        }
-      }
-
-      cache_set('entities', $entities_definition, 'cache_yamm', CACHE_PERMANENT);
-    }
-    else {
-      $entities_definition = $cached->data;
-    }
-  }
-
-  return $entities_definition;
 }
 
 /**
@@ -502,25 +429,53 @@ function yamm_api_uuid_get($type, $identifier) {
 }
 
 /**
+ * Implementation of hook_oox_api().
+ */
+function yamm_api_oox_api() {
+  return array(
+    // Core exceptions.
+    'Yamm_EntityException' => 'lib/Yamm/Entity.php',
+    'Yamm_Entity_ClassNotFoundException' => 'lib/Yamm/Entity.php',
+    'Yamm_Entity_UnknownUuidException' => 'lib/Yamm/Entity.php',
+    // Entities.
+    'Yamm_Entity' => 'lib/Yamm/Entity.php',
+    'Yamm_EntitySettingsAbstract' => 'lib/Yamm/Entity.php',
+    'Yamm_Entity_Content' => 'lib/Yamm/Entity/Content.php',
+    'Yamm_Entity_ContentSettings' => 'lib/Yamm/Entity/Content.php',
+    'Yamm_Entity_File' => 'lib/Yamm/Entity/File.php',
+    'Yamm_Entity_FileSettings' => 'lib/Yamm/Entity/File.php',
+    'Yamm_Entity_Node' => 'lib/Yamm/Entity/Node.php',
+    'Yamm_Entity_Term' => 'lib/Yamm/Entity/Term.php',
+    'Yamm_Entity_TermSettings' => 'lib/Yamm/Entity/Term.php',
+    'Yamm_Entity_User' => 'lib/Yamm/Entity/User.php',
+    'Yamm_Entity_UserSettings' => 'lib/Yamm/Entity/User.php',
+    'Yamm_Entity_View' => 'lib/Yamm/Entity/User.php',
+    'Yamm_Entity_Vocabulary' => 'lib/Yamm/Entity/Vocabulary.php',
+    'Yamm_Entity_VocabularySettings' => 'lib/Yamm/Entity/Vocabulary.php',
+    // Entity handling API.
+    'Yamm_EntityFactory' => 'lib/Yamm/EntityFactory.php',
+    'Yamm_EntityFetcherInterface' => 'lib/Yamm/EntityFetcher.php',
+    'Yamm_EntityFetcher' => 'lib/Yamm/EntityFetcher.php',
+    'Yamm_EntityFetcher_Xmlrpc' => 'lib/Yamm/EntityFetcher/Xmlrpc.php',
+    'Yamm_EntityParser' => 'lib/Yamm/EntityParser.php',
+    'Yamm_EntityRegistry' => 'lib/Yamm/EntityRegistry.php',
+    // File handling.
+    'Yamm_FileFetcherInterface' => 'lib/Yamm/FileFetcher.php',
+    'Yamm_FileFetcher' => 'lib/Yamm/FileFetcher.php',
+    'Yamm_FileFetcher_Http' => 'lib/Yamm/FileFetcher/Http.php',
+    // Transaction hanling.
+    'Yamm_Server' => 'lib/Yamm/Server.php',
+    'Yamm_TransactionHelper' => 'lib/Yamm/TransactionHelper.php',
+  );
+}
+
+/**
  * Bootstrap entity subsystem, load all needed PHP files.
  */
 function yamm_api_bootstrap_entity() {
   static $loaded = FALSE;
 
   if (! $loaded) {
-    // Include core API.
-    require_once dirname(__FILE__) . '/lib/Yamm/Entity.php';
-    require_once dirname(__FILE__) . '/lib/Yamm/EntityFetcher.php';
-    require_once dirname(__FILE__) . '/lib/Yamm/EntityParser.php';
-    // Include the default entity fetcher, because no other implementation
-    // exists right now.
-    require_once dirname(__FILE__) . '/lib/Yamm/Server.php';
-    require_once dirname(__FILE__) . '/lib/Yamm/FileFetcher.php';
-    require_once dirname(__FILE__) . '/lib/Yamm/FileFetcher/Http.php';
-    require_once dirname(__FILE__) . '/lib/Yamm/Server.php';
-    require_once dirname(__FILE__) . '/lib/Yamm/TransactionHelper.php';
-    require_once dirname(__FILE__) . '/lib/Yamm/EntityFetcher/Xmlrpc.php';
-
     // Include supported third party modules.
     $modules = array('filefield');
     foreach ($modules as $module) {
